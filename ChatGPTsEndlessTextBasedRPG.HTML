@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descent into Darkness</title>
+<style>
+	.message-wrapper { min-height: 6em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
+	#message { margin: 0; padding: 0; }
+  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; }
+  #game { text-align: center; }
+  button { margin: 4px; }
+  #shop { display: none; }
+  .shop-item { display: inline-block; margin-right: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="titleScreen" style="text-align: center;">
+  <h1>Descent into Darkness</h1>
+  <br>
+  <button id="startBtn">Die</button>
+</div>
+<div id="gameContainer" style="display: none; flex-direction: column; align-items: center;">
+	<div id="enemyStats" style="text-align: center;"></div>
+	<br>
+	<div class="message-wrapper">
+		<div id="message" style="text-align: center;"></div>
+	</div>
+  <div id="combatBtns" style="display: none;"></div>
+  <br>
+  <div id="status" style="text-align: center;"></div>
+  <br>
+  <button id="exploreBtn">Explore</button>
+  <button id="usePotionBtn">Use Potion</button>
+  <button id="fightBossBtn" disabled>Fight Boss</button>
+  <button id="shopBtn">Visit Shop</button>
+  <div id="shop" style="display: none; text-align: center;">
+  <h3>Shop</h3>
+  <div class="shop-item">
+    <button id="buyWeaponBtn">Buy Weapon</button>
+    <div id="weaponCost"></div>
+  </div>
+  <div class="shop-item">
+    <button id="buyArmorBtn">Buy Armor</button>
+    <div id="armorCost"></div>
+  </div>
+  <div class="shop-item">
+    <button id="buyPotionBtn">Buy Potion</button>
+    <div id="potionCost"></div>
+  </div>
+  <br>
+  <br>
+  <button id="closeShopBtn">Close Shop</button>
+</div>
+  <br>
+  <div class="button-group">
+    <button id="saveBtn">Save Game</button>
+    <button id="loadBtn">Load Game</button>
+  </div>
+  <div class="button-group">
+    <button id="exportBtn">Export Save</button>
+    <button id="importBtn">Import Save</button>
+  </div>
+  <br>
+  <button id="resetSaveBtn">Reset Save Data</button>
+  <input type="file" id="fileInput" accept=".save" style="display: none;" onchange="importSave(event);" />
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+const game = (() => {
+  const el = id => document.getElementById(id);
+
+  return {
+  titleScreen: el('titleScreen'),
+ gameContainer: el('gameContainer'),
+startBtn: el('startBtn'),
+    message: el('message'),
+    status: el('status'),
+    exploreBtn: el('exploreBtn'),
+    usePotionBtn: el('usePotionBtn'),
+    shopBtn: el('shopBtn'),
+    shop: el('shop'),
+    buyWeaponBtn: el('buyWeaponBtn'),
+    buyArmorBtn: el('buyArmorBtn'),
+    buyPotionBtn: el('buyPotionBtn'),
+    closeShopBtn: el('closeShopBtn'),
+    fightBossBtn: el('fightBossBtn'),
+    enemyStats: el('enemyStats'),
+	combatBtns: el('combatBtns'),
+	saveBtn: el('saveBtn'),
+	loadBtn: el('loadBtn'),
+	exportBtn: el('exportBtn'),
+	importBtn: el('importBtn'),
+	fileInput: el('fileInput'),
+	resetSaveBtn: el("resetSaveBtn"),
+	
+	soundTracks: {
+	mysteriousAmbience: [
+  ['C3', 0.5], ['G3', 0.5], ['C4', 0.5], ['E4', 0.5],
+  ['A2', 0.5], ['E3', 0.5], ['A3', 0.5], ['C#4', 0.5],
+  ['D3', 0.5], ['A3', 0.5], ['D4', 0.5], ['F#4', 0.5],
+  ['G2', 0.5], ['D3', 0.5], ['G3', 0.5], ['B3', 0.5]
+],
+
+	},
+	soundEffects: {
+  victory: [['C5', 0.1], ['E5', 0.1], ['G5', 0.1], ['B5', 0.1], ['D6', 0.1], ['C6', 0.1]],
+  levelUp: [['G4', 0.2], ['D#5', 0.2], ['G5', 0.2], ['C6', 0.2], ['D#6', 0.2], ['G6', 0.2]],
+  nextFloor: [['A3', 0.3], ['E4', 0.3], ['A4', 0.3], ['E5', 0.3]],
+},
+	
+	text: {
+		startGame: [
+			"You wake up in a dark, unfamiliar place...<br>Unarmed and dressed in rags...<br>Decrepit skeletons scattered across the floor...<br>You must find a way out of this place...",
+			  "Darkness surrounds you...<br>Clad in tattered rags, you shiver...<br>Bones litter the ground...<br>A desperate search for escape begins...",
+  "In the cold, black void you awaken...<br>Wearing only ragged clothes...<br>Skeletal remains scattered nearby...<br>You must flee this forsaken place...",
+  "You find yourself in inky shadows...<br>Dressed in mere scraps...<br>Grinning skulls stare back at you...<br>A desperate escape is your only hope..."
+
+		],
+		loadGame: [
+  "As the shadows part, your memories resurface...<br>Once more, you stand amidst the darkness...",
+  "The veil of darkness lifts, revealing a familiar scene...<br>You return to the heart of the crypt...",
+  "The murky haze dissipates, and your journey resumes...<br>Darkness and secrets surround you once again...",
+  "A shroud of blackness retreats, and the crypt re-emerges...<br>Your quest continues, fraught with peril...",
+  "Emerging from the abyss, your senses return...<br>The crypt's mysteries await your exploration..."
+],
+		defeatBoss: [
+  "The fallen foe crumbles to dust before your eyes...<br>A sense of triumph courses through your veins...",
+  "As the dark entity's final breath escapes its lips...<br>Victory and relief wash over you...",
+  "The malevolent being collapses, vanquished...<br>You stand victorious amidst the darkness..."
+],
+		enemyEncounter: [
+    "A chilling wind passes...<br>You sense a malevolent presence...<br>Your heartbeat quickens...",
+    "The shadows come alive...<br>A sinister figure emerges...<br>Its eyes burn with hatred...",
+    "An eerie silence fills the air...<br>Broken by the sound of labored breathing...<br>A monstrous creature stands before you..."
+],
+		nothingFound: [
+    "You cautiously explore the darkness...<br>But nothing of interest catches your eye...",
+    "The gloom conceals secrets yet to be discovered...<br>You find nothing...",
+    "You search high and low...<br>all you find is dust and cobwebs..."
+],
+		healingShrine: [
+    "An ethereal light emanates from a hidden shrine...<br>A sense of warmth and comfort washes over you...",
+    "A faint, otherworldly glow surrounds you...<br>As it fades, you feel rejuvenated...",
+    "Whispers echo through the shadows...<br>As if by a miracle, your wounds begin to heal..."
+],
+		bossFound: [
+    "A suffocating aura of darkness envelops the room...<br>A powerful and malevolent being awaits...",
+    "A sinister, commanding presence looms before you...<br>The very air around you feels heavy with dread...",
+    "An oppressive atmosphere fills the room...<br>An unspeakable terror reveals itself..."
+],
+		approachBoss: [
+  "The ground trembles beneath your feet...<br>An unseen force draws you towards a daunting confrontation...",
+  "A sinister chill runs down your spine...<br>The path ahead leads to an inevitable clash...",
+  "Dark energy swirls around you, growing stronger...<br>A formidable adversary lies in wait..."
+],
+		shopEnter: [
+			"You enter a dimly lit room...<br>Weapons, armor and potions strewn about...<br>A skeleton greets you with an eerie stare...",
+			  "A room of flickering shadows greets you...<br>Weapons and trinkets lie in wait...<br>A bony figure watches you, unblinking...",
+  "You stumble into a chamber of dim light...<br>Armaments and relics beckon...<br>An eerie skeletal sentinel observes your every move...",
+  "A murky room lies before you...<br>Amidst the gloom, equipment and potions are strewn...<br>A lifeless, bony guardian greets you with empty eyes..."
+		],
+		shopExit: [
+			"The skeleton bids you farewell with a chilling stare...<br>You step out into the darkness once again...",
+			  "The bone-laden merchant gazes upon your departure...<br>The darkness swallows you whole once more...",
+  "With a silent nod from the skeletal shopkeeper...<br>You venture back into the unknown...",
+  "As the lifeless vendor's gaze lingers...<br>You leave behind the relative safety of the room..."
+		],
+		playerDeath: [
+			"Your vision fades as death's cold embrace envelops you...<br>Shrouded in darkness, you feel your strength ebbing away...<br>But a faint, flickering light beckons you to rise once more...",
+			  "As the darkness claims your life...<br>Your last breath escapes, cold and alone...<br>Yet a glimmer of hope remains...",
+  "Overwhelmed by the void, you succumb to its grasp...<br>But from the depths, a faint light calls you back...",
+  "Death's icy fingers claim your soul...<br>Lost within the shadows...<br>A distant spark refuses to let you go..."
+		],
+		
+levelUp: [
+  "With newfound strength coursing through your veins...<br>You feel invigorated, ready to face greater challenges...",
+  "As your power grows, the darkness seems less daunting...<br>Victory seems more certain with each step...",
+  "A surge of energy flows through you...<br>Empowering you to face the horrors that lie ahead..."
+],
+		newFloor: [
+			"As you descend deeper into the crypt, the air grows colder...<br>Shadows dance on the walls, concealing secrets untold...",
+			"The chilling air grows heavier as you venture deeper...<br>Unseen whispers haunt the corridors...",
+  "You tread cautiously into the abyss, each step revealing more horrors...<br>The darkness holds its breath, waiting...",
+  "Descending further, the oppressive gloom threatens to consume you...<br>Yet you press on, determined to conquer the unknown..."
+		],
+		error: "An unexpected error occurred. Please try again.",
+	},
+	
+    enemies: [
+  { name: 'Goblin', difficulty: 'easy', hp: 25, maxHp: 25, attack: 7, gold: 5, exp: 4 },
+  { name: 'Zombie', difficulty: 'easy', hp: 28, maxHp: 28, attack: 8, gold: 6, exp: 4 },
+  { name: 'Mimic', difficulty: 'easy', hp: 30, maxHp: 30, attack: 9, gold: 8, exp: 5 },
+  { name: 'Gnoll', difficulty: 'easy', hp: 26, maxHp: 26, attack: 7, gold: 6, exp: 4 },
+  { name: 'Giant Rat', difficulty: 'easy', hp: 24, maxHp: 24, attack: 6, gold: 5, exp: 3 },
+  { name: 'Orc', difficulty: 'easy', hp: 29, maxHp: 29, attack: 9, gold: 8, exp: 5 },
+  { name: 'Kobold', difficulty: 'easy', hp: 27, maxHp: 27, attack: 8, gold: 6, exp: 4 },
+  { name: 'Hobgoblin', difficulty: 'easy', hp: 32, maxHp: 32, attack: 10, gold: 9, exp: 5 },
+  { name: 'Spiderling', difficulty: 'easy', hp: 22, maxHp: 22, attack: 6, gold: 4, exp: 3 },
+  { name: 'Wolf', difficulty: 'easy', hp: 25, maxHp: 25, attack: 8, gold: 5, exp: 4 },
+  { name: 'Mud Golem', difficulty: 'easy', hp: 24, maxHp: 24, attack: 6, gold: 6, exp: 3 },
+{ name: 'Will-o-Wisp', difficulty: 'easy', hp: 20, maxHp: 20, attack: 5, gold: 4, exp: 3 },
+{ name: 'Lesser Elemental', difficulty: 'easy', hp: 21, maxHp: 21, attack: 5, gold: 6, exp: 3 },
+{ name: 'Slime', difficulty: 'easy', hp: 20, maxHp: 20, attack: 4, gold: 5, exp: 3 },
+{ name: 'Dark Sprite', difficulty: 'easy', hp: 20, maxHp: 22, attack: 5, gold: 5, exp: 3 },
+{ name: 'Living Armor', difficulty: 'easy', hp: 23, maxHp: 23, attack: 6, gold: 7, exp: 3 },
+{ name: 'Gelatinous Cube', difficulty: 'easy', hp: 27, maxHp: 27, attack: 5, gold: 6, exp: 3 },
+{ name: 'Necromancer Acolyte', difficulty: 'easy', hp: 25, maxHp: 25, attack: 7, gold: 8, exp: 4 },
+{ name: 'Wyvern Hatchling', difficulty: 'easy', hp: 22, maxHp: 19, attack: 6, gold: 5, exp: 3 },
+  { name: 'Imp', difficulty: 'medium', hp: 35, maxHp: 35, attack: 13, gold: 11, exp: 6 },
+  { name: 'Phantom', difficulty: 'medium', hp: 40, maxHp: 40, attack: 14, gold: 13, exp: 8 },
+  { name: 'Harpy', difficulty: 'medium', hp: 36, maxHp: 36, attack: 12, gold: 10, exp: 6 },
+  { name: 'Banshee', difficulty: 'medium', hp: 45, maxHp: 45, attack: 16, gold: 16, exp: 9 },
+  { name: 'Djinn', difficulty: 'medium', hp: 46, maxHp: 46, attack: 15, gold: 12, exp: 7 },
+  { name: 'Basilisk', difficulty: 'medium', hp: 34, maxHp: 34, attack: 10, gold: 13, exp: 6 },
+{ name: 'Wererat', difficulty: 'medium', hp: 33, maxHp: 33, attack: 11, gold: 12, exp: 6 },
+{ name: 'Ice Wraith', difficulty: 'medium', hp: 39, maxHp: 39, attack: 13, gold: 15, exp: 8 },
+{ name: 'Succubus', difficulty: 'medium', hp: 37, maxHp: 37, attack: 12, gold: 14, exp: 7 },
+{ name: 'Troll', difficulty: 'medium', hp: 44, maxHp: 44, attack: 18, gold: 18, exp: 10 },
+  { name: 'Treant', difficulty: 'medium', hp: 38, maxHp: 38, attack: 14, gold: 14, exp: 7 },
+  { name: 'Giant Spider', difficulty: 'medium', hp: 39, maxHp: 39, attack: 14, gold: 13, exp: 7 },
+  { name: 'Centaur', difficulty: 'medium', hp: 41, maxHp: 41, attack: 16, gold: 16, exp: 9 },
+  { name: 'Griffin', difficulty: 'medium', hp: 42, maxHp: 42, attack: 15, gold: 15, exp: 8 },
+  { name: 'Necromancer', difficulty: 'hard', hp: 66, maxHp: 66, attack: 26, gold: 32, exp: 17 },
+  { name: 'Ogre', difficulty: 'hard', hp: 62, maxHp: 62, attack: 22, gold: 24, exp: 12 },
+  { name: 'Wraith', difficulty: 'hard', hp: 52, maxHp: 52, attack: 24, gold: 26, exp: 13 },
+  { name: 'Cyclops', difficulty: 'hard', hp: 68, maxHp: 68, attack: 27, gold: 30, exp: 16 },
+  { name: 'Shadow Fiend', difficulty: 'hard', hp: 58, maxHp: 58, attack: 23, gold: 25, exp: 13 },
+  { name: 'Hellhound', difficulty: 'hard', hp: 64, maxHp: 64, attack: 29, gold: 33, exp: 17 },
+  { name: 'Gargoyle', difficulty: 'hard', hp: 52, maxHp: 52, attack: 22, gold: 22, exp: 11 },
+  { name: 'Lich', difficulty: 'hard', hp: 72, maxHp: 72, attack: 31, gold: 31, exp: 18 },
+  { name: 'Minotaur', difficulty: 'hard', hp: 65, maxHp: 65, attack: 25, gold: 28, exp: 14 },
+  { name: 'Earth Elemental', difficulty: 'hard', hp: 70, maxHp: 70, attack: 27, gold: 31, exp: 16 },
+  { name: 'Air Elemental', difficulty: 'hard', hp: 55, maxHp: 55, attack: 26, gold: 29, exp: 15 },
+  { name: 'Fire Elemental', difficulty: 'hard', hp: 60, maxHp: 60, attack: 28, gold: 32, exp: 16 },
+  { name: 'Water Elemental', difficulty: 'hard', hp: 58, maxHp: 58, attack: 23, gold: 26, exp: 14 },
+  { name: 'Vampire', difficulty: 'hard', hp: 63, maxHp: 63, attack: 30, gold: 33, exp: 18 },
+  { name: 'Giant', difficulty: 'hard', hp: 69, maxHp: 69, attack: 29, gold: 35, exp: 19 },
+  { name: 'Manticore', difficulty: 'hard', hp: 61, maxHp: 61, attack: 26, gold: 30, exp: 15 },
+  { name: 'Chimera', difficulty: 'hard', hp: 66, maxHp: 66, attack: 28, gold: 36, exp: 19 },
+],
+
+    encounters: [
+    { type: 'enemy', chance: 70 },
+    { type: 'nothing', chance: 20 },
+    { type: 'healing', chance: 10 },
+    ],
+	
+player: {
+  exp: 0, hp: 100, gold: 0, weaponTier: 0, armorTier: 0, potions: 0, floor: 1,
+  floorBoss: null, foundBoss: false, bossDead: false, enemiesOnFloor: [],
+},
+	
+	constants: {
+  baseMaxHp: 100, baseAttack: 10, baseMaxExp: 20, basePotions: 10,
+  maxHpIncrease: 30, attackIncrease: 7, maxExpMultiplier: 1.5,
+  weaponAttackBonus: 8, armorHpBonus: 30, healingPotionAmount: 50,
+  scalingFactorIncrease: 0.15,
+  bossHpMultiplier: 2, bossAttackMultiplier: 2, bossGoldMultiplier: 3, bossExpMultiplier: 2,
+  healingShrineMin: 15, healingShrineMax: 40,
+  bossFindChance: 12,
+  minDamageMultiplier: 0.6, maxDamageMultiplier: 1.4,
+  weaponCostBase: 70, armorCostBase: 70, potionCost: 20,
+},
+  
+  calculations: {
+    weaponCost: function (weaponTier) {
+      return weaponTier * game.constants.weaponCostBase + game.constants.weaponCostBase;
+    },
+    armorCost: function (armorTier) {
+      return armorTier * game.constants.armorCostBase + game.constants.armorCostBase;
+    },
+    playerStats: function (exp) {
+      let level = 1;
+      let totalExp = game.constants.baseMaxExp;
+      let expRequiredForNextLevel = totalExp;
+
+      while (exp >= expRequiredForNextLevel) {
+        level++;
+        totalExp += expRequiredForNextLevel;
+        expRequiredForNextLevel = Math.floor(game.constants.baseMaxExp * Math.pow(game.constants.maxExpMultiplier, level - 1));
+      }
+
+      const weaponAttack = game.player.weaponTier * game.constants.weaponAttackBonus;
+      const armorHp = game.player.armorTier * game.constants.armorHpBonus;
+
+      return {
+        level: level,
+        maxHp: game.constants.baseMaxHp + (level - 1) * game.constants.maxHpIncrease + armorHp,
+        attack: game.constants.baseAttack + (level - 1) * game.constants.attackIncrease + weaponAttack,
+        maxExp: expRequiredForNextLevel,
+      };
+    },
+    damage: function (attack) {
+      const minDamage = Math.floor(attack * game.constants.minDamageMultiplier);
+      const maxDamage = Math.floor(attack * game.constants.maxDamageMultiplier);
+      return Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+    },
+  },
+	
+  };
+})();
+
+function handleMessage(text, append = false, error = null, clear = false) {
+  if (error) {
+    console.error(error);
+    text = game.text.error;
+  }
+  const playerStats = game.calculations.playerStats(game.player.exp);
+  game.status.innerHTML = `HP: ${game.player.hp}/${playerStats.maxHp}<br>Level: ${playerStats.level}<br>Exp: ${game.player.exp}/${playerStats.maxExp}<br>Floor: ${game.player.floor}<br>Attack: ${playerStats.attack}<br>Gold: ${game.player.gold}<br>Potions: ${game.player.potions}<br>Weapon Tier: ${game.player.weaponTier}<br>Armor Tier: ${game.player.armorTier}`;
+  if (!text) return;
+  try {
+    if (clear) {
+      game.message.innerHTML = '';
+    }
+    if (append) {
+      game.message.innerHTML += text + "<br>";
+    } else {
+      game.message.innerHTML = text + "<br>";
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function playerDeath() {
+  try {
+    const goldLoss = Math.floor(game.player.gold / 2);
+    game.player.gold -= goldLoss;
+
+    const playerStatsBeforeDeath = game.calculations.playerStats(game.player.exp);
+    const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
+
+    let previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
+    while (previousLevelStats.level >= newLevel) {
+      game.player.exp--;
+      previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
+    }
+
+    game.player.floor = Math.max(game.player.floor - 1, 1);
+    game.player.hp = game.calculations.playerStats(game.player.exp).maxHp;
+    generateEnemiesOnFloor();
+    generateFloorBoss();
+    updateEnemyStats(null);
+    game.player.foundBoss = false;
+    fightBossBtn.textContent = "Fight Boss";
+    fightBossBtn.onclick = fightFloorBoss;
+    fightBossBtn.disabled = true;
+
+    handleMessage(getRandomDialogue("playerDeath"), true);
+    handleMessage(`You return to level ${newLevel}, floor ${game.player.floor} and have ${game.player.gold} gold left.`, true);
+
+    setButtons(true);
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function levelUp() {
+  try {
+    const playerStats = game.calculations.playerStats(game.player.exp);
+	
+	game.player.hp = playerStats.maxHp;
+    
+      handleMessage(getRandomDialogue("levelUp"), true);
+      handleMessage(`Congratulations! You reached level ${playerStats.level}!<br>Your max HP and attack have increased!`, true);
+
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function getRandomEncounter() {
+  try {
+  const totalChance = game.encounters.reduce((acc, cur) => acc + cur.chance, 0);
+  let randomChance = Math.floor(Math.random() * totalChance);
+  for (const encounter of game.encounters) {
+    if (randomChance < encounter.chance) {
+      return encounter.type;
+    }
+    randomChance -= encounter.chance;
+  }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+  
+function getRandomEnemy(difficulty) {
+  try {
+  if (difficulty) {
+    const filteredEnemies = game.enemies.filter(enemy => enemy.difficulty === difficulty);
+    const randomIndex = Math.floor(Math.random() * filteredEnemies.length);
+    return JSON.parse(JSON.stringify(filteredEnemies[randomIndex]));
+  } else {
+    const randomIndex = Math.floor(Math.random() * game.enemies.length);
+    return JSON.parse(JSON.stringify(game.enemies[randomIndex]));
+  }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function fight(enemyTemplate) {
+setButtonVisibility(false);
+  const enemy = createEnemy(enemyTemplate);
+  updateEnemyStats(enemy);
+  const damageToPlayer = game.calculations.damage(enemy.attack);
+  
+  const fightBtn = document.createElement('button');
+fightBtn.textContent = 'Fight';
+const runBtn = document.createElement('button');
+runBtn.textContent = 'Run';
+
+  fightBtn.onclick = () => {
+  try {
+    handleMessage(null, false, null, true);
+
+	const playerStats = game.calculations.playerStats(game.player.exp);
+    const damageToEnemy = game.calculations.damage(playerStats.attack);
+    
+
+    enemy.hp -= damageToEnemy;
+    game.player.hp -= damageToPlayer;
+
+    updateEnemyStats(enemy);
+
+    if (game.player.hp <= 0) {
+      handleMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}, but the ${enemy.name} defeated you.`);
+	  setButtonVisibility(true);
+      setButtons(true, fightBtn, runBtn);
+      updateEnemyStats(null);
+      playerDeath();
+    } else if (enemy.hp <= 0) {
+      game.player.gold += enemy.gold;
+      game.player.exp += enemy.exp;
+      handleMessage(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
+		if (game.player.exp >= playerStats.maxExp) {
+			levelUp();
+			playMelody(game.soundEffects.levelUp, 0.4);
+		} else {
+			playMelody(game.soundEffects.victory, 0.4);
+		}
+		if (enemy.isFloorBoss) {
+			fightBossBtn.textContent = "Next Floor";
+			fightBossBtn.onclick = nextFloor;
+			handleMessage(getRandomDialogue("defeatBoss"), true);
+			game.player.bossDead = true;
+		}
+	setButtonVisibility(true);
+    setButtons(true, fightBtn, runBtn);
+
+      updateEnemyStats(null);
+    } else {
+      handleMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} dealt ${damageToPlayer} damage to you.`);
+        game.combatBtns.appendChild(fightBtn);
+        game.combatBtns.appendChild(runBtn);
+        game.combatBtns.style.display = 'block';
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+};
+
+  runBtn.onclick = () => {
+    game.player.hp -= damageToPlayer;
+if (game.player.hp <= 0) {
+  handleMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away and were defeated.`);
+  enemyStats.style.display = 'none';
+  playerDeath();
+} else {
+  handleMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away.`);
+}
+setButtonVisibility(true);
+setButtons(true, fightBtn, runBtn);
+
+updateEnemyStats(null);
+  };
+
+
+  setButtons(false);
+  handleMessage(null, false, null, true);
+  game.combatBtns.appendChild(fightBtn);
+	game.combatBtns.appendChild(runBtn);
+	game.combatBtns.style.display = 'block';
+}
+
+function explore() {
+  try {
+    updateEnemyStats(null);
+
+    if (!game.player.foundBoss) {
+      if (Math.floor(Math.random() * 100) < game.constants.bossFindChance) {
+        game.player.foundBoss = true;
+        handleMessage(getRandomDialogue("bossFound"));
+        handleMessage(`You found the floor boss!`, true);
+        const floorBossCopy = scaleFloorBoss();
+        updateEnemyStats(floorBossCopy);
+        fightBossBtn.disabled = false;
+        return;
+      }
+    }
+
+    const encounterType = getRandomEncounter();
+    switch (encounterType) {
+      case 'enemy':
+    handleMessage(getRandomDialogue("enemyEncounter"));
+    handleMessage("What will you do?", true);
+    const randomIndex = Math.floor(Math.random() * game.player.enemiesOnFloor.length);
+    const enemyName = game.player.enemiesOnFloor[randomIndex];
+    const enemyTemplate = game.enemies.find(enemy => enemy.name === enemyName);
+    const scaledEnemy = scaleEnemyStats(enemyTemplate);
+    fight(scaledEnemy);
+    break;
+      case 'nothing':
+        handleMessage(getRandomDialogue("nothingFound"));
+        break;
+      case 'healing':
+        const healingAmount = Math.floor(Math.random() * (game.constants.healingShrineMax - game.constants.healingShrineMin)) + game.constants.healingShrineMin;
+        game.player.hp = Math.min(game.player.hp + healingAmount, game.calculations.playerStats(game.player.exp).maxHp);
+        handleMessage(getRandomDialogue("healingShrine"));
+        handleMessage(`You recovered ${healingAmount} HP!`, true);
+        break;
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function generateFloorBoss() {
+  try {
+    const availableEnemies = game.enemies.filter(enemy => game.player.enemiesOnFloor.includes(enemy.name));
+    const randomIndex = Math.floor(Math.random() * availableEnemies.length);
+    const floorBoss = availableEnemies[randomIndex];
+    game.player.floorBoss = floorBoss.name;
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function fightFloorBoss() {
+  try {
+    if (game.player.floorBoss) {
+      handleMessage(null, false, null, true);
+      const floorBossCopy = scaleFloorBoss();
+      handleMessage(getRandomDialogue("approachBoss"));
+      fight(floorBossCopy);
+    } else {
+      handleMessage("You haven't found the floor boss yet.");
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function scaleFloorBoss() {
+  try {
+    const floorBoss = game.enemies.find(enemy => enemy.name === game.player.floorBoss);
+    const scaledFloorBoss = scaleEnemyStats(floorBoss);
+    const floorBossCopy = JSON.parse(JSON.stringify(scaledFloorBoss));
+    floorBossCopy.isFloorBoss = true;
+    floorBossCopy.name += " (Floor Boss)";
+    floorBossCopy.maxHp = Math.floor(floorBossCopy.maxHp * game.constants.bossHpMultiplier);
+    floorBossCopy.hp = floorBossCopy.maxHp;
+    floorBossCopy.attack = Math.floor(floorBossCopy.attack * game.constants.bossAttackMultiplier);
+    floorBossCopy.gold = Math.floor(floorBossCopy.gold * game.constants.bossGoldMultiplier);
+    floorBossCopy.exp = Math.floor(floorBossCopy.exp * game.constants.bossExpMultiplier);
+    return floorBossCopy;
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function updateEnemyStats(enemy) {
+  if (enemy) {
+    enemyStats.innerHTML = `${enemy.name}<br>HP: ${enemy.hp}<br>Attack: ${enemy.attack}<br>`;
+    enemyStats.style.display = 'block';
+  } else {
+    enemyStats.innerHTML = '';
+    enemyStats.style.display = 'none';
+  }
+}
+
+function generateEnemiesOnFloor() {
+  try {
+    if (game.player.floor === 1) {
+      let easyEnemy1, easyEnemy2, easyEnemy3;
+
+      do {
+        easyEnemy1 = getRandomEnemy("easy");
+        easyEnemy2 = getRandomEnemy("easy");
+        easyEnemy3 = getRandomEnemy("easy");
+      } while (!easyEnemy1 || !easyEnemy2 || !easyEnemy3 || easyEnemy1.name === easyEnemy2.name || easyEnemy1.name === easyEnemy3.name || easyEnemy2.name === easyEnemy3.name);
+
+      game.player.enemiesOnFloor = [easyEnemy1.name, easyEnemy2.name, easyEnemy3.name];
+    } else {
+      const easyEnemy = getRandomEnemy("easy").name;
+      const mediumEnemy = getRandomEnemy("medium").name;
+      const hardEnemy = getRandomEnemy("hard").name;
+
+      game.player.enemiesOnFloor = [easyEnemy, mediumEnemy, hardEnemy];
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function scaleEnemyStats(enemy) {
+  try {
+    const scalingFactor = 1 + (game.player.floor - 1) * game.constants.scalingFactorIncrease;
+    const scaledEnemy = JSON.parse(JSON.stringify(enemy));
+    scaledEnemy.hp = Math.floor(scaledEnemy.hp * scalingFactor);
+    scaledEnemy.maxHp = scaledEnemy.hp;
+    scaledEnemy.attack = Math.floor(scaledEnemy.attack * scalingFactor);
+    scaledEnemy.gold = Math.floor(scaledEnemy.gold * scalingFactor);
+    scaledEnemy.exp = Math.floor(scaledEnemy.exp * scalingFactor);
+    return scaledEnemy;
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function createEnemy(enemyTemplate) {
+  try {
+    const newEnemy = JSON.parse(JSON.stringify(enemyTemplate));
+    newEnemy.hp = newEnemy.maxHp;
+    return newEnemy;
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function nextFloor() {
+  try {
+  game.player.floor++;
+  game.player.floorBoss = null;
+  game.player.foundBoss = false;
+  game.player.bossDead = false;
+  fightBossBtn.textContent = "Fight Boss";
+  fightBossBtn.onclick = fightFloorBoss;
+  fightBossBtn.disabled = true;
+  handleMessage(getRandomDialogue("newFloor"));
+  handleMessage(`You've reached floor ${game.player.floor}!`, true);
+  playMelody(game.soundEffects.nextFloor, 0.4);
+  generateEnemiesOnFloor();
+  generateFloorBoss();
+  updateEnemyStats(null);
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function getRandomDialogue(scenario) {
+  try {
+    const dialogues = game.text[scenario];
+    const randomIndex = Math.floor(Math.random() * dialogues.length);
+    return dialogues[randomIndex];
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function usePotion() {
+  try {
+    if (game.player.potions > 0) {
+      const playerStats = game.calculations.playerStats(game.player.exp);
+      if (game.player.hp >= playerStats.maxHp) {
+        handleMessage("Your HP is already full.");
+      } else {
+        const healingAmount = game.constants.healingPotionAmount;
+        game.player.hp = Math.min(game.player.hp + healingAmount, playerStats.maxHp);
+        game.player.potions--;
+        handleMessage(`You used a potion and recovered ${healingAmount} HP!`);
+      }
+    } else {
+      handleMessage("You don't have any potions left.");
+    }
+    updateEnemyStats(null);
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function updateCosts() {
+  const weaponCost = game.calculations.weaponCost(game.player.weaponTier);
+  const armorCost = game.calculations.armorCost(game.player.armorTier);
+  const potionCost = game.constants.potionCost;
+
+  document.getElementById('weaponCost').textContent = `Cost: ${weaponCost} gold`;
+  document.getElementById('armorCost').textContent = `Cost: ${armorCost} gold`;
+  document.getElementById('potionCost').textContent = `Cost: ${potionCost} gold`;
+}
+
+  function openShop() {
+    try {
+	handleMessage(getRandomDialogue("shopEnter"));
+  setButtonVisibility(false);
+  shop.style.display = 'block';
+  updateEnemyStats(null);
+  updateCosts();
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function closeShop() {
+  try {
+  handleMessage(getRandomDialogue("shopExit"));
+  setButtonVisibility(true);
+  shop.style.display = 'none';
+  updateEnemyStats(null);
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function buyWeapon() {
+  try {
+    const cost = game.calculations.weaponCost(game.player.weaponTier);
+    if (game.player.gold >= cost) {
+      game.player.gold -= cost;
+      game.player.weaponTier++;
+      handleMessage(`You upgraded your weapon to Tier ${game.player.weaponTier}.`);
+      updateCosts();
+    } else {
+      handleMessage("You don't have enough gold to upgrade your weapon.");
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function buyArmor() {
+  try {
+    const cost = game.calculations.armorCost(game.player.armorTier);
+    if (game.player.gold >= cost) {
+      game.player.gold -= cost;
+      game.player.armorTier++;
+	  game.player.hp += game.constants.armorHpBonus;
+      handleMessage(`You upgraded your armor to Tier ${game.player.armorTier}.`);
+      updateCosts();
+    } else {
+      handleMessage("You don't have enough gold to upgrade your armor.");
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+  function buyPotion() {
+    try {
+    const potionCost = game.constants.potionCost;
+    if (game.player.gold >= potionCost) {
+      game.player.gold -= potionCost;
+      game.player.potions++;
+      handleMessage(`You bought a potion. You now have ${game.player.potions} potions.`);
+      updateCosts();
+    } else {
+      handleMessage("You don't have enough gold to buy a potion.");
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function setButtons(enable, fightBtn, runBtn) {
+  try {
+    if (fightBtn) {
+      combatBtns.innerHTML = '';
+		game.combatBtns.style.display = 'none';
+    }
+    if (runBtn) {
+      combatBtns.innerHTML = '';
+		game.combatBtns.style.display = 'none';
+    }
+
+    exploreBtn.disabled = !enable;
+    usePotionBtn.disabled = !enable;
+    shopBtn.disabled = !enable;
+    fightBossBtn.disabled = !(enable && game.player.foundBoss);
+	
+	saveBtn.disabled = !enable;
+    loadBtn.disabled = !enable;
+    exportBtn.disabled = !enable;
+    importBtn.disabled = !enable;
+	resetSaveBtn.disabled = !enable;
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function setButtonVisibility(visible) {
+  const display = visible ? 'inline' : 'none';
+  exploreBtn.style.display = display;
+  usePotionBtn.style.display = display;
+  shopBtn.style.display = display;
+  fightBossBtn.style.display = display;
+  
+  saveBtn.style.display = display;
+    loadBtn.style.display = display;
+    exportBtn.style.display = display;
+    importBtn.style.display = display;
+	resetSaveBtn.style.display = display;
+}
+
+function saveGame(autoSave = true) {
+  try {
+  const saveData = btoa(JSON.stringify(game.player));
+    localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.save', saveData);
+  
+  if (autoSave) {
+  console.log('autosave successful');
+  } else {
+    handleMessage('Game saved successfully!<br>Please note that clearing browser cache will wipe save data!');
+	}
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function loadGame() {
+  try {
+    const saveData = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
+    if (saveData) {
+      game.player = JSON.parse(atob(saveData));
+      handleMessage('Game loaded successfully!');
+      handleMessage(getRandomDialogue("loadGame"), true);
+      updateEnemyStats(null);
+
+      if (game.player.bossDead) {
+        fightBossBtn.textContent = "Next Floor";
+        fightBossBtn.onclick = nextFloor;
+        fightBossBtn.disabled = false;
+      } else {
+        fightBossBtn.textContent = "Fight Boss";
+        fightBossBtn.onclick = fightFloorBoss;
+        fightBossBtn.disabled = !game.player.foundBoss;
+      }
+    } else {
+      handleMessage('No saved game data found.');
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function exportSave() {
+  try {
+    const saveData = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
+    if (saveData) {
+      const a = document.createElement('a');
+      a.href = 'data:text/plain;charset=utf-8,' + saveData;
+      a.download = 'SerRat&ChatGPTsEndlessTextBasedRPG.save';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      handleMessage('Save file exported successfully!');
+    } else {
+      handleMessage('No saved game data found.');
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function importSave(event) {
+  try {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const saveData = e.target.result;
+          localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.save', saveData);
+          loadGame();
+          handleMessage('Save file imported successfully!');
+        } catch (error) {
+          handleMessage(null, false, error);
+        }
+      };
+      reader.readAsText(file);
+    }
+  } catch (error) {
+    handleMessage(null, false, error);
+  }
+}
+
+function triggerFileInput() {
+  fileInput.click();
+}
+
+function resetSaveData() {
+  const confirmation = confirm("Are you sure you want to reset your save data? This action cannot be undone.");
+
+  if (confirmation) {
+    localStorage.removeItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
+	
+    handleMessage('Save data reset successfully.');
+    startGame();
+  }
+ }
+
+const noteToFrequencyMap = {
+    'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+    'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+    'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+    'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.26, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77,
+    'C6': 1046.50, 'C#6': 1108.73, 'D6': 1174.66, 'D#6': 1244.51, 'E6': 1318.51, 'F6': 1396.91, 'F#6': 1479.98, 'G6': 1567.98, 'G#6': 1661.22, 'A6': 1760.00, 'A#6': 1864.66, 'B6': 1975.53,
+  };
+  let audioContext, compressor, gainNode,loopedSource, loopedMelody
+  let waveformType, attack, decay, sustain, release, lowPassStrength;
+  let fadeInDuration, fadeOutDuration;
+
+function initAudioContext() {
+
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  compressor = audioContext.createDynamicsCompressor();
+
+  compressor.threshold.value = -40;
+  compressor.knee.value = 40;
+  compressor.ratio.value = 8;
+  compressor.attack.value = 0.001;
+  compressor.release.value = 0.1;
+
+  gainNode = audioContext.createGain();
+  gainNode.connect(compressor);
+  compressor.connect(audioContext.destination);
+  
+  //sounds settings
+	waveformType = 'sawtooth';
+attack = 0.004;
+decay = 0.14;
+sustain = 0.38;
+release = 0.18;
+lowPassStrength = 0.7;
+fadeInDuration = 0.005;
+fadeOutDuration = 0.005;
+	//end of sound settings
+}
+
+async function checkAudioContext() {
+  if (audioContext.state === 'suspended') {
+    return audioContext.resume();
+  }
+}
+  
+async function playMelody(melody, volume, loop = false) {
+  await checkAudioContext();
+
+  const source = audioContext.createBufferSource();
+  source.buffer = generateAudioBuffer(melody);
+  source.loop = loop;
+
+  source.connect(gainNode);
+
+  if (loop) {
+    if (loopedSource) {
+      loopedSource.disconnect(gainNode);
+    }
+    loopedSource = source;
+    loopedMelody = { melody, volume };
+  } else {
+    if (loopedSource) {
+      loopedSource.disconnect(gainNode);
+      source.onended = () => {
+        loopedSource.connect(gainNode);
+      };
+    }
+  }
+
+  gainNode.gain.value = volume;
+  source.start();
+
+  return source;
+}
+
+function generateAudioBuffer(melody) {
+  const gapDuration = 0.001;
+  const melodyDuration = melody.reduce((acc, note) => acc + note[1] + gapDuration, 0);
+  const audioBuffer = audioContext.createBuffer(1, audioContext.sampleRate * melodyDuration, audioContext.sampleRate);
+  const audioBufferData = audioBuffer.getChannelData(0);
+
+  let currentSample = 0;
+
+  for (const [note, duration] of melody) {
+    const frequency = noteToFrequencyMap[note];
+    const samplesPerCycle = Math.round(audioContext.sampleRate / frequency);
+    const cycles = Math.round(duration * audioContext.sampleRate);
+
+    const noteBuffer = new Float32Array(cycles);
+    for (let i = 0; i < cycles; i++) {
+      switch (waveformType) {
+    case 'sine':
+      noteBuffer[i] = Math.sin(2 * Math.PI * (i % samplesPerCycle) / samplesPerCycle);
+      break;
+    case 'square':
+      noteBuffer[i] = ((i % samplesPerCycle) / samplesPerCycle < 0.5 ? 1 : -1) * 0.1;
+      break;
+    case 'triangle':
+      noteBuffer[i] = 4 * (i % samplesPerCycle) / samplesPerCycle - 1;
+      if (noteBuffer[i] > 1) noteBuffer[i] = 2 - noteBuffer[i];
+      break;
+    case 'sawtooth':
+      noteBuffer[i] = (2 * (i % samplesPerCycle) / samplesPerCycle - 1) * 0.1;
+      break;
+    default:
+      noteBuffer[i] = Math.sin(2 * Math.PI * (i % samplesPerCycle) / samplesPerCycle);
+  }
+    }
+
+    applyADSR(noteBuffer, audioContext.sampleRate, attack, decay, sustain, release);
+    applyLowPassFilter(noteBuffer, lowPassStrength);
+
+    for (let i = 0; i < noteBuffer.length; i++) {
+      audioBufferData[currentSample++] = noteBuffer[i];
+    }
+    currentSample += Math.round(gapDuration * audioContext.sampleRate);
+  }
+
+  return audioBuffer;
+}
+
+function applyLowPassFilter(buffer, alpha) {
+  let prevOutput = 0;
+  for (let i = 0; i < buffer.length; i++) {
+    buffer[i] = prevOutput + alpha * (buffer[i] - prevOutput);
+    prevOutput = buffer[i];
+  }
+}
+
+function applyADSR(buffer, sampleRate, attack, decay, sustain, release) {
+  const fadeInDuration = 0.002;
+  const fadeOutDuration = 0.002;
+  const fadeInSamples = Math.round(sampleRate * fadeInDuration);
+  const fadeOutSamples = Math.round(sampleRate * fadeOutDuration);
+
+  const attackSamples = Math.round(sampleRate * attack);
+  const decaySamples = Math.round(sampleRate * decay);
+  const releaseSamples = Math.round(sampleRate * release);
+  const sustainLevel = sustain;
+
+  for (let i = 0; i < buffer.length; i++) {
+    if (i < fadeInSamples) {
+      buffer[i] *= i / fadeInSamples;
+    } else if (i < attackSamples) {
+      buffer[i] *= i / attackSamples;
+    } else if (i < attackSamples + decaySamples) {
+      buffer[i] *= sustainLevel + (1 - sustainLevel) * (1 - (i - attackSamples) / decaySamples);
+    } else if (i >= buffer.length - releaseSamples - fadeOutSamples) {
+      buffer[i] *= (buffer.length - i - fadeOutSamples) / releaseSamples;
+    } else if (i >= buffer.length - fadeOutSamples) {
+      buffer[i] *= (buffer.length - i) / fadeOutSamples;
+    } else {
+      buffer[i] *= sustainLevel;
+    }
+  }
+}
+
+function startGame() {
+	titleScreen.style.display = 'none';
+	gameContainer.style.display = 'flex';
+	initAudioContext();
+	playMelody(game.soundTracks.mysteriousAmbience, 0.4, true);
+  
+	if (localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save') != null) {
+		loadGame();
+	} else {
+		game.player = {
+		exp: 0, hp: game.constants.baseMaxHp, gold: 0, weaponTier: 0, armorTier: 0, potions: game.constants.basePotions, floor: 1,
+		floorBoss: null, foundBoss: false, bossDead: false, enemiesOnFloor: [], };
+  
+		generateEnemiesOnFloor();
+		generateFloorBoss();
+		updateEnemyStats(null);
+		handleMessage(getRandomDialogue("startGame"), true);
+	}
+}
+
+startBtn.onclick = startGame;
+exploreBtn.onclick = explore;
+usePotionBtn.onclick = usePotion;
+shopBtn.onclick = openShop;
+closeShopBtn.onclick = closeShop;
+buyWeaponBtn.onclick = buyWeapon;
+buyArmorBtn.onclick = buyArmor;
+buyPotionBtn.onclick = buyPotion;
+fightBossBtn.onclick = fightFloorBoss;
+  
+saveBtn.onclick = () => { saveGame(false); };
+loadBtn.onclick = loadGame;
+exportBtn.onclick = exportSave;
+importBtn.onclick = triggerFileInput;
+fileInput.onchange = importSave;
+resetSaveBtn.onclick = resetSaveData;
+  
+});
+</script>
+</body>
+</html>

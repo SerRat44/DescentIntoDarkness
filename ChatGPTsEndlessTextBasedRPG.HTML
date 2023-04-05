@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Descent into Darkness</title>
 <style>
-	.message-wrapper { min-height: 6em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
-	#message { margin: 0; padding: 0; }
-  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; }
+  .message-wrapper { min-height: 6em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
+  #message { margin: 0; padding: 0; }
+  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 4px; overflow-y: auto; }
   #game { text-align: center; }
   button { margin: 4px; }
-  #shop { display: none; }
-  .shop-item { display: inline-block; margin-right: 20px; text-align: center; }
+  #shop, #settingsMenu { display: none; }
+  .shop-item, .settings-item { display: inline-block; margin-right: 20px; text-align: center; }
+  input[type="range"] {
+  width: 200px;
+}
 </style>
 </head>
 <body>
@@ -21,11 +24,11 @@
   <button id="startBtn">Die</button>
 </div>
 <div id="gameContainer" style="display: none; flex-direction: column; align-items: center;">
-	<div id="enemyStats" style="text-align: center;"></div>
-	<br>
-	<div class="message-wrapper">
-		<div id="message" style="text-align: center;"></div>
-	</div>
+  <div id="enemyStats" style="text-align: center;"></div>
+  <br>
+  <div class="message-wrapper">
+    <div id="message" style="text-align: center;"></div>
+  </div>
   <div id="combatBtns" style="display: none;"></div>
   <br>
   <div id="status" style="text-align: center;"></div>
@@ -34,8 +37,22 @@
   <button id="usePotionBtn">Use Potion</button>
   <button id="fightBossBtn" disabled>Fight Boss</button>
   <button id="shopBtn">Visit Shop</button>
-  <div id="shop" style="display: none; text-align: center;">
+  <br>
+  <button id="settingsBtn">Settings</button>
+  <div class="button-group">
+    <button id="saveBtn">Save Game</button>
+    <button id="loadBtn">Load Game</button>
+  </div>
+  <div class="button-group">
+    <button id="exportBtn">Export Save</button>
+    <button id="importBtn">Import Save</button>
+  </div>
+  <input type="file" id="fileInput" accept=".save" style="display: none;" onchange="importSave(event);" />
+</div>
+
+<div id="shop" style="display: none; text-align: center;">
   <h3>Shop</h3>
+  <br>
   <div class="shop-item">
     <button id="buyWeaponBtn">Buy Weapon</button>
     <div id="weaponCost"></div>
@@ -52,18 +69,29 @@
   <br>
   <button id="closeShopBtn">Close Shop</button>
 </div>
+
+<div id="settingsMenu" style="display: none; text-align: center;">
+  <h3>Settings</h3>
   <br>
-  <div class="button-group">
-    <button id="saveBtn">Save Game</button>
-    <button id="loadBtn">Load Game</button>
+  <div class="settings-item">
+    <label for="trackVolume">Soundtrack Volume:</label>
+	<span id="trackVolumeValue"></span>
+	<br>
+    <input type="range" id="trackVolume" min="0" max="100" value="50">
   </div>
-  <div class="button-group">
-    <button id="exportBtn">Export Save</button>
-    <button id="importBtn">Import Save</button>
+  <br>
+  <div class="settings-item">
+    <label for="effectVolume">Sound Effect Volume:</label>
+	<span id="effectVolumeValue"></span>
+	<br>
+    <input type="range" id="effectVolume" min="0" max="100" value="50">
   </div>
+  <br>
   <br>
   <button id="resetSaveBtn">Reset Save Data</button>
-  <input type="file" id="fileInput" accept=".save" style="display: none;" onchange="importSave(event);" />
+  <br>
+  <br>
+  <button id="closeSettingsBtn">Close Settings</button>
 </div>
 
 <script>
@@ -94,15 +122,322 @@ startBtn: el('startBtn'),
 	exportBtn: el('exportBtn'),
 	importBtn: el('importBtn'),
 	fileInput: el('fileInput'),
-	resetSaveBtn: el("resetSaveBtn"),
+	resetSaveBtn: el('resetSaveBtn'),
+	settingsMenu: el('settingsMenu'),
+	settingsBtn: el('settingsBtn'),
+closeSettingsBtn: el('closeSettingsBtn'),
+trackVolume: el('trackVolume'),
+effectVolume: el('effectVolume'),
+trackVolumeValue: el('trackVolumeValue'),
+effectVolumeValue: el('effectVolumeValue'),
 	
 	soundTracks: {
 	mysteriousAmbience: [
-  ['C3', 0.5], ['G3', 0.5], ['C4', 0.5], ['E4', 0.5],
-  ['A2', 0.5], ['E3', 0.5], ['A3', 0.5], ['C#4', 0.5],
-  ['D3', 0.5], ['A3', 0.5], ['D4', 0.5], ['F#4', 0.5],
-  ['G2', 0.5], ['D3', 0.5], ['G3', 0.5], ['B3', 0.5]
+	['C3', 0.5], ['G3', 0.5], ['C4', 0.5], ['E4', 0.5],
+	['A2', 0.5], ['E3', 0.5], ['A3', 0.5], ['C#4', 0.5],
+	['D3', 0.5], ['A3', 0.5], ['D4', 0.5], ['F#4', 0.5],
+	['G2', 0.5], ['D3', 0.5], ['G3', 0.5], ['B3', 0.5]
+	],
+	
+epicAdventure: [
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
+    ['F3', 0.4], ['A3', 0.4], ['C4', 0.4], ['F4', 0.4], ['C4', 0.4], ['A3', 0.4],
+    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
+
+    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
+    ['F3', 0.4], ['A3', 0.4], ['C4', 0.4], ['F4', 0.4], ['C4', 0.4], ['A3', 0.4],
+    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
+  ],
+  
+  darkMysticJourney: [
+    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
+    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
+
+    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
+    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
+
+    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
+    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
+  ],
+  
+  forgottenKingdoms: [
+
+    ['C3', 0.4], ['E3', 0.4], ['G3', 0.8], ['C4', 0.8], ['G3', 0.4], ['E3', 0.4],
+    ['A2', 0.4], ['D3', 0.4], ['F3', 0.8], ['A3', 0.8], ['F3', 0.4], ['D3', 0.4],
+    ['D#2', 0.4], ['G2', 0.4], ['A#2', 0.8], ['D#3', 0.8], ['A#2', 0.4], ['G2', 0.4],
+    ['G2', 0.4], ['C3', 0.4], ['D#3', 0.8], ['G3', 0.8], ['D#3', 0.4], ['C3', 0.4],
+  ],
+
+legendaryBanger: [
+    ['E4', 0.2], ['G4', 0.2], ['B4', 0.2], ['E5', 0.2], ['B4', 0.2], ['G4', 0.2],
+    ['C5', 0.2], ['E5', 0.2], ['G5', 0.2], ['C6', 0.2], ['G5', 0.2], ['E5', 0.2],
+    ['B4', 0.2], ['D5', 0.2], ['F#5', 0.2], ['B5', 0.2], ['F#5', 0.2], ['D5', 0.2],
+    ['G4', 0.2], ['B4', 0.2], ['D5', 0.2], ['G5', 0.2], ['D5', 0.2], ['B4', 0.2],
 ],
+  
+DarkMystique: [
+    ['E3', 0.2], ['G3', 0.2], ['B3', 0.2], ['E4', 0.2], ['B3', 0.2], ['G3', 0.2],
+    ['C4', 0.2], ['E4', 0.2], ['G4', 0.2], ['C5', 0.2], ['G4', 0.2], ['E4', 0.2],
+    ['B3', 0.2], ['D4', 0.2], ['F#4', 0.2], ['B4', 0.2], ['F#4', 0.2], ['D4', 0.2],
+    ['G3', 0.2], ['B3', 0.2], ['D4', 0.2], ['G4', 0.2], ['D4', 0.2], ['B3', 0.2],
+],
+
+dungeonDelverAnthem: [
+    ['C4', 0.25], ['G3', 0.25], ['E4', 0.5], ['G4', 0.5],
+    ['C5', 0.25], ['G4', 0.25], ['E4', 0.5], ['C4', 0.5],
+
+    ['A3', 0.25], ['E3', 0.25], ['C4', 0.5], ['E4', 0.5],
+    ['A4', 0.25], ['E4', 0.25], ['C4', 0.5], ['A3', 0.5],
+
+    ['D4', 0.25], ['A3', 0.25], ['F4', 0.5], ['A4', 0.5],
+    ['D5', 0.25], ['A4', 0.25], ['F4', 0.5], ['D4', 0.5],
+
+    ['G4', 0.25], ['D4', 0.25], ['B3', 0.5], ['D4', 0.5],
+    ['G4', 0.25], ['D4', 0.25], ['B3', 0.5], ['G3', 0.5],
+  ],
+
+  fantasySaga: [
+    ['C4', 0.4], ['G4', 0.4], ['E4', 0.4], ['G4', 0.4],
+    ['C5', 0.4], ['G4', 0.4], ['E4', 0.4], ['C4', 0.4],
+
+    ['A3', 0.4], ['E4', 0.4], ['C4', 0.4], ['E4', 0.4],
+    ['A4', 0.4], ['E4', 0.4], ['C4', 0.4], ['A3', 0.4],
+
+    ['D4', 0.4], ['A4', 0.4], ['F4', 0.4], ['A4', 0.4],
+    ['D5', 0.4], ['A4', 0.4], ['F4', 0.4], ['D4', 0.4],
+	],
+	
+	dungeonCrusader: [
+    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['E5', 0.6], ['B4', 0.3], ['G4', 0.3],
+    ['C5', 0.3], ['E5', 0.3], ['G5', 0.6], ['C6', 0.6], ['G5', 0.3], ['E5', 0.3],
+
+    ['B4', 0.3], ['D5', 0.3], ['F#5', 0.6], ['B5', 0.6], ['F#5', 0.3], ['D5', 0.3],
+    ['G4', 0.3], ['B4', 0.3], ['D5', 0.6], ['G5', 0.6], ['D5', 0.3], ['B4', 0.3],
+  ],
+  
+  shadowSlayer: [
+    ['E4', 0.4], ['G4', 0.4], ['B4', 0.8], ['G4', 0.4], ['E4', 0.4], ['B3', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.8], ['F#4', 0.4], ['D4', 0.4], ['A3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.8], ['E4', 0.4], ['C4', 0.4], ['G3', 0.4],
+    ['B3', 0.4], ['D4', 0.4], ['F#4', 0.8], ['D4', 0.4], ['B3', 0.4], ['F#3', 0.4],
+
+    ['E4', 0.4], ['G4', 0.4], ['C5', 0.8], ['G4', 0.4], ['E4', 0.4], ['C4', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['B4', 0.8], ['F#4', 0.4], ['D4', 0.4], ['B3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['A4', 0.8], ['E4', 0.4], ['C4', 0.4], ['A3', 0.4],
+    ['B3', 0.4], ['D4', 0.4], ['G4', 0.8], ['D4', 0.4], ['B3', 0.4], ['G3', 0.4],
+  ],
+
+arcaneLabyrinth: [
+    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['A4', 0.3], ['G4', 0.3], ['E4', 0.6],
+    ['D4', 0.3], ['F#4', 0.3], ['A4', 0.6], ['G4', 0.3], ['F#4', 0.3], ['D4', 0.6],
+
+    ['C4', 0.3], ['E4', 0.3], ['G4', 0.6], ['F#4', 0.3], ['E4', 0.3], ['C4', 0.6],
+    ['B3', 0.3], ['D4', 0.3], ['F#4', 0.6], ['E4', 0.3], ['D4', 0.3], ['B3', 0.6],
+  ],
+  
+  arcaneMaze: [
+    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E4', 0.4], ['B3', 0.4], ['E3', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D4', 0.4], ['A3', 0.4], ['D3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C4', 0.4], ['G3', 0.4], ['C3', 0.4],
+    ['B3', 0.4], ['D4', 0.4], ['F#4', 0.4], ['B3', 0.4], ['F#3', 0.4], ['B2', 0.4],
+
+    ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['E4', 0.4], ['C4', 0.4], ['E3', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['B4', 0.4], ['D4', 0.4], ['B3', 0.4], ['D3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['C4', 0.4], ['A3', 0.4], ['C3', 0.4],
+    ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['B3', 0.4], ['G3', 0.4], ['B2', 0.4],
+  ],
+  
+  crypticLabyrinth: [
+    ['G4', 0.3], ['E4', 0.3], ['D4', 0.6], ['B3', 0.3], ['G3', 0.3], ['E3', 0.3],
+    ['A3', 0.2], ['C4', 0.2], ['E4', 0.4], ['A4', 0.6], ['E4', 0.2], ['C4', 0.2],
+
+    ['F4', 0.4], ['D4', 0.4], ['C4', 0.4], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3],
+    ['G3', 0.2], ['B3', 0.2], ['D4', 0.4], ['G4', 0.6], ['D4', 0.2], ['B3', 0.2],
+
+    ['E4', 0.3], ['G4', 0.3], ['B4', 0.3], ['E5', 0.3], ['B4', 0.3], ['G4', 0.3],
+    ['A4', 0.2], ['C5', 0.2], ['E5', 0.4], ['A5', 0.6], ['E5', 0.2], ['C5', 0.2],
+
+    ['F4', 0.4], ['A4', 0.4], ['C5', 0.4], ['F5', 0.3], ['C5', 0.3], ['A4', 0.3],
+    ['G4', 0.2], ['B4', 0.2], ['D5', 0.4], ['G5', 0.6], ['D5', 0.2], ['B4', 0.2],
+  ],
+  
+  shadowyAbyss: [
+    ['E4', 0.3], ['C4', 0.3], ['B3', 0.6], ['G3', 0.3], ['E3', 0.3], ['C3', 0.3],
+    ['F3', 0.2], ['A3', 0.2], ['C4', 0.4], ['F4', 0.6], ['C4', 0.2], ['A3', 0.2],
+
+    ['G4', 0.4], ['E4', 0.4], ['D4', 0.4], ['B3', 0.3], ['G3', 0.3], ['E3', 0.3],
+    ['A3', 0.2], ['C4', 0.2], ['E4', 0.4], ['A4', 0.6], ['E4', 0.2], ['C4', 0.2],
+
+    ['D4', 0.3], ['B3', 0.3], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3], ['B2', 0.3],
+    ['E3', 0.2], ['G3', 0.2], ['B3', 0.4], ['E4', 0.6], ['B3', 0.2], ['G3', 0.2],
+
+    ['F4', 0.4], ['D4', 0.4], ['C4', 0.4], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3],
+    ['G3', 0.2], ['B3', 0.2], ['D4', 0.4], ['G4', 0.6], ['D4', 0.2], ['B3', 0.2],
+  ],
+  
+  arcaneInferno: [
+    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['E5', 0.3], ['C5', 0.3], ['A4', 0.3],
+    ['D4', 0.2], ['F4', 0.2], ['A4', 0.4], ['D5', 0.6], ['A4', 0.2], ['F4', 0.2],
+
+    ['G4', 0.4], ['B4', 0.4], ['D5', 0.4], ['G5', 0.3], ['E5', 0.3], ['C5', 0.3],
+    ['F4', 0.2], ['A4', 0.2], ['C5', 0.4], ['F5', 0.6], ['C5', 0.2], ['A4', 0.2],
+
+    ['E5', 0.3], ['C5', 0.3], ['A4', 0.3], ['E4', 0.3], ['G4', 0.3], ['B4', 0.3],
+    ['D5', 0.2], ['B4', 0.2], ['G4', 0.4], ['D4', 0.6], ['G4', 0.2], ['B4', 0.2],
+
+    ['C5', 0.4], ['A4', 0.4], ['F4', 0.4], ['C4', 0.3], ['E4', 0.3], ['G4', 0.3],
+    ['A4', 0.2], ['F4', 0.2], ['D4', 0.4], ['A3', 0.6], ['D4', 0.2], ['F4', 0.2],
+  ],
+  
+  endlessArcade: [
+    ['C4', 0.3], ['E4', 0.3], ['G4', 0.3], ['C5', 0.3], ['G4', 0.3], ['E4', 0.3],
+	['C5', 0.3], ['A4', 0.3], ['E4', 0.3], ['C4', 0.3], ['G3', 0.3], ['E3', 0.3],
+	
+    ['A3', 0.3], ['C4', 0.3], ['E4', 0.3], ['A4', 0.3], ['E4', 0.3], ['C4', 0.3],
+	['F4', 0.3], ['D4', 0.3], ['A3', 0.3], ['F3', 0.3], ['C3', 0.3], ['A2', 0.3],
+
+    ['D4', 0.3], ['F4', 0.3], ['A4', 0.3], ['D5', 0.3], ['A4', 0.3], ['F4', 0.3],
+	['G4', 0.3], ['E4', 0.3], ['C4', 0.3], ['G3', 0.3], ['D3', 0.3], ['B2', 0.3],
+	
+    ['G3', 0.3], ['B3', 0.3], ['D4', 0.3], ['G4', 0.3], ['D4', 0.3], ['B3', 0.3],    
+    ['A4', 0.3], ['F4', 0.3], ['D4', 0.3], ['A3', 0.3], ['E3', 0.3], ['C3', 0.3],
+  ],
+  
+  arcaneLabyrinth2: [
+    ['G4', 0.4], ['E4', 0.4], ['C4', 0.4], ['G3', 0.4], ['C4', 0.4], ['E4', 0.4],
+    ['F4', 0.4], ['D4', 0.4], ['B3', 0.4], ['F3', 0.4], ['B3', 0.4], ['D4', 0.4],
+
+    ['E4', 0.4], ['C4', 0.4], ['A3', 0.4], ['E3', 0.4], ['A3', 0.4], ['C4', 0.4],
+    ['D4', 0.4], ['B3', 0.4], ['G3', 0.4], ['D3', 0.4], ['G3', 0.4], ['B3', 0.4],
+
+    ['C4', 0.4], ['A3', 0.4], ['E3', 0.4], ['C3', 0.4], ['E3', 0.4], ['A3', 0.4],
+    ['B3', 0.4], ['G3', 0.4], ['D3', 0.4], ['B2', 0.4], ['D3', 0.4], ['G3', 0.4],
+
+    ['A3', 0.4], ['F3', 0.4], ['C3', 0.4], ['A2', 0.4], ['C3', 0.4], ['F3', 0.4],
+    ['G3', 0.4], ['E3', 0.4], ['C3', 0.4], ['G2', 0.4], ['C3', 0.4], ['E3', 0.4],
+  ],
+  
+  arcaneWhispers: [
+    ['C4', 0.3], ['E4', 0.5], ['G4', 0.7], ['C5', 0.5], ['G4', 0.3], ['E4', 0.5],
+    ['A3', 0.3], ['C4', 0.5], ['E4', 0.7], ['A4', 0.5], ['E4', 0.3], ['C4', 0.5],
+
+    ['F3', 0.3], ['A3', 0.5], ['C4', 0.7], ['F4', 0.5], ['C4', 0.3], ['A3', 0.5],
+    ['G3', 0.3], ['B3', 0.5], ['D4', 0.7], ['G4', 0.5], ['D4', 0.3], ['B3', 0.5],
+
+    ['E4', 0.3], ['G4', 0.5], ['B4', 0.7], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
+    ['D4', 0.3], ['F#4', 0.5], ['A4', 0.7], ['D5', 0.5], ['A4', 0.3], ['F#4', 0.5],
+
+    ['C4', 0.3], ['E4', 0.5], ['G4', 0.7], ['C5', 0.5], ['G4', 0.3], ['E4', 0.5],
+    ['G3', 0.3], ['B3', 0.5], ['D4', 0.7], ['G4', 0.5], ['D4', 0.3], ['B3', 0.5],
+  ],
+  
+  enigmaticRiddle: [
+    ['D4', 0.4], ['F#4', 0.6], ['A4', 0.4], ['D5', 0.6], ['A4', 0.4], ['F#4', 0.6],
+    ['G4', 0.4], ['B4', 0.6], ['D5', 0.4], ['G5', 0.6], ['D5', 0.4], ['B4', 0.6],
+
+    ['A4', 0.4], ['C5', 0.6], ['E5', 0.4], ['A5', 0.6], ['E5', 0.4], ['C5', 0.6],
+    ['E4', 0.4], ['G4', 0.6], ['B4', 0.4], ['E5', 0.6], ['B4', 0.4], ['G4', 0.6],
+
+    ['C5', 0.4], ['E5', 0.6], ['G5', 0.4], ['C6', 0.6], ['G5', 0.4], ['E5', 0.6],
+    ['F4', 0.4], ['A4', 0.6], ['C5', 0.4], ['F5', 0.6], ['C5', 0.4], ['A4', 0.6],
+
+    ['B4', 0.4], ['D5', 0.6], ['F#5', 0.4], ['B5', 0.6], ['F#5', 0.4], ['D5', 0.6],
+    ['G4', 0.4], ['B4', 0.6], ['D5', 0.4], ['G5', 0.6], ['D5', 0.4], ['B4', 0.6],
+  ],
+  
+  arcanePulse: [
+    ['F4', 0.5], ['A4', 0.7], ['C5', 0.5], ['F5', 0.7], ['C5', 0.5], ['A4', 0.7],
+    ['G4', 0.5], ['B4', 0.7], ['D5', 0.5], ['G5', 0.7], ['D5', 0.5], ['B4', 0.7],
+
+    ['A4', 0.5], ['C5', 0.7], ['E5', 0.5], ['A5', 0.7], ['E5', 0.5], ['C5', 0.7],
+    ['E4', 0.5], ['G4', 0.7], ['B4', 0.5], ['E5', 0.7], ['B4', 0.5], ['G4', 0.7],
+
+    ['C5', 0.5], ['E5', 0.7], ['G5', 0.5], ['C6', 0.7], ['G5', 0.5], ['E5', 0.7],
+    ['F4', 0.5], ['A4', 0.7], ['C5', 0.5], ['F5', 0.7], ['C5', 0.5], ['A4', 0.7],
+
+    ['B4', 0.5], ['D5', 0.7], ['F#5', 0.5], ['B5', 0.7], ['F#5', 0.5], ['D5', 0.7],
+    ['G4', 0.5], ['B4', 0.7], ['D5', 0.5], ['G5', 0.7], ['D5', 0.5], ['B4', 0.7],
+  ],
+  
+  arcaneSpiral: [
+    ['G4', 0.4], ['B4', 0.5], ['D5', 0.6], ['G5', 0.5], ['D5', 0.6], ['B4', 0.5],
+    ['A4', 0.4], ['C5', 0.5], ['E5', 0.6], ['A5', 0.5], ['E5', 0.6], ['C5', 0.5],
+
+    ['F4', 0.4], ['A4', 0.5], ['C5', 0.6], ['F5', 0.5], ['C5', 0.6], ['A4', 0.5],
+    ['E4', 0.4], ['G4', 0.5], ['B4', 0.6], ['E5', 0.5], ['B4', 0.6], ['G4', 0.5],
+
+    ['C5', 0.4], ['E5', 0.5], ['G5', 0.6], ['C6', 0.5], ['G5', 0.6], ['E5', 0.5],
+    ['F4', 0.4], ['A4', 0.5], ['C5', 0.6], ['F5', 0.5], ['C5', 0.6], ['A4', 0.5],
+
+    ['B4', 0.4], ['D5', 0.5], ['F#5', 0.6], ['B5', 0.5], ['F#5', 0.6], ['D5', 0.5],
+    ['G4', 0.4], ['B4', 0.5], ['D5', 0.6], ['G5', 0.5], ['D5', 0.6], ['B4', 0.5],
+  ],
+  
+  arcaneWanderer: [
+    ['F4', 0.3], ['A4', 0.5], ['C5', 0.3], ['F5', 0.5], ['C5', 0.3], ['A4', 0.5],
+    ['G4', 0.3], ['B4', 0.5], ['D5', 0.3], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
+
+    ['A4', 0.3], ['C5', 0.5], ['E5', 0.3], ['A5', 0.5], ['E5', 0.3], ['C5', 0.5],
+    ['E4', 0.3], ['G4', 0.5], ['B4', 0.3], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
+
+    ['C5', 0.5], ['E5', 0.3], ['G5', 0.5], ['C6', 0.3], ['G5', 0.5], ['E5', 0.3],
+    ['F4', 0.5], ['A4', 0.3], ['C5', 0.5], ['F5', 0.3], ['C5', 0.5], ['A4', 0.3],
+
+    ['B4', 0.5], ['D5', 0.3], ['F#5', 0.5], ['B5', 0.3], ['F#5', 0.5], ['D5', 0.3],
+    ['G4', 0.5], ['B4', 0.3], ['D5', 0.5], ['G5', 0.3], ['D5', 0.5], ['B4', 0.3],
+  ],
+  
+  arcaneMaze2: [
+    ['D4', 0.3], ['F#4', 0.5], ['A4', 0.7], ['D5', 0.5], ['A4', 0.3], ['F#4', 0.5],
+    ['G4', 0.3], ['B4', 0.5], ['D5', 0.7], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
+
+    ['A4', 0.3], ['C5', 0.5], ['E5', 0.7], ['A5', 0.5], ['E5', 0.3], ['C5', 0.5],
+    ['E4', 0.3], ['G4', 0.5], ['B4', 0.7], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
+
+    ['C5', 0.3], ['E5', 0.5], ['G5', 0.7], ['C6', 0.5], ['G5', 0.3], ['E5', 0.5],
+    ['F4', 0.3], ['A4', 0.5], ['C5', 0.7], ['F5', 0.5], ['C5', 0.3], ['A4', 0.5],
+
+    ['B4', 0.3], ['D5', 0.5], ['F#5', 0.7], ['B5', 0.5], ['F#5', 0.3], ['D5', 0.5],
+    ['G4', 0.3], ['B4', 0.5], ['D5', 0.7], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
+  ],
+
+arcaneChronicles: [
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
+
+    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
+    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
+
+    ['D4', 0.4], ['F4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F4', 0.4],
+    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
+  ],
+  
+  shadowsOfTheAbyss: [
+    ['D4', 0.4], ['F4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F4', 0.4],
+    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
+
+    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
+    ['F4', 0.4], ['A4', 0.4], ['C5', 0.4], ['F5', 0.4], ['C5', 0.4], ['A4', 0.4],
+
+    ['G4', 0.4], ['B4', 0.4], ['D5', 0.4], ['G5', 0.4], ['D5', 0.4], ['B4', 0.4],
+    ['A4', 0.4], ['C5', 0.4], ['E5', 0.4], ['A5', 0.4], ['E5', 0.4], ['C5', 0.4],
+  ],
+
+
 
 	},
 	soundEffects: {
@@ -252,17 +587,22 @@ player: {
   exp: 0, hp: 100, gold: 0, weaponTier: 0, armorTier: 0, potions: 0, floor: 1,
   floorBoss: null, foundBoss: false, bossDead: false, enemiesOnFloor: [],
 },
+
+settings: {
+	trackVolume: 0.2, effectVolume: 0.2,
+
+},
 	
 	constants: {
   baseMaxHp: 100, baseAttack: 10, baseMaxExp: 20, basePotions: 10,
   maxHpIncrease: 30, attackIncrease: 7, maxExpMultiplier: 1.5,
-  weaponAttackBonus: 8, armorHpBonus: 30, healingPotionAmount: 50,
+  weaponAttackBonus: 8, armorHpBonus: 35, healingPotionAmount: 50,
   scalingFactorIncrease: 0.15,
-  bossHpMultiplier: 2, bossAttackMultiplier: 2, bossGoldMultiplier: 3, bossExpMultiplier: 2,
-  healingShrineMin: 15, healingShrineMax: 40,
+  bossHpMultiplier: 2, bossAttackMultiplier: 2, bossGoldMultiplier: 3, bossExpMultiplier: 3,
+  healingShrineMin: 20, healingShrineMax: 50,
   bossFindChance: 12,
   minDamageMultiplier: 0.6, maxDamageMultiplier: 1.4,
-  weaponCostBase: 70, armorCostBase: 70, potionCost: 20,
+  weaponCostBase: 70, armorCostBase: 70, potionCost: 15,
 },
   
   calculations: {
@@ -331,12 +671,17 @@ function playerDeath() {
     game.player.gold -= goldLoss;
 
     const playerStatsBeforeDeath = game.calculations.playerStats(game.player.exp);
-    const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
 
-    let previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
-    while (previousLevelStats.level >= newLevel) {
-      game.player.exp--;
-      previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
+    if (playerStatsBeforeDeath.level === 1) {
+      game.player.exp = 0;
+    } else {
+      const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
+
+      let previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
+      while (previousLevelStats.level >= newLevel) {
+        game.player.exp--;
+        previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
+      }
     }
 
     game.player.floor = Math.max(game.player.floor - 1, 1);
@@ -350,7 +695,7 @@ function playerDeath() {
     fightBossBtn.disabled = true;
 
     handleMessage(getRandomDialogue("playerDeath"), true);
-    handleMessage(`You return to level ${newLevel}, floor ${game.player.floor} and have ${game.player.gold} gold left.`, true);
+    handleMessage(`You return to level ${game.calculations.playerStats(game.player.exp).level}, floor ${game.player.floor} and have ${game.player.gold} gold left.`, true);
 
     setButtons(true);
   } catch (error) {
@@ -438,9 +783,9 @@ runBtn.textContent = 'Run';
       handleMessage(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
 		if (game.player.exp >= playerStats.maxExp) {
 			levelUp();
-			playMelody(game.soundEffects.levelUp, 0.4);
+			playMelody(game.soundEffects.levelUp, game.settings.effectVolume);
 		} else {
-			playMelody(game.soundEffects.victory, 0.4);
+			playMelody(game.soundEffects.victory, game.settings.effectVolume);
 		}
 		if (enemy.isFloorBoss) {
 			fightBossBtn.textContent = "Next Floor";
@@ -642,7 +987,7 @@ function nextFloor() {
   fightBossBtn.disabled = true;
   handleMessage(getRandomDialogue("newFloor"));
   handleMessage(`You've reached floor ${game.player.floor}!`, true);
-  playMelody(game.soundEffects.nextFloor, 0.4);
+  playMelody(game.soundEffects.nextFloor, game.settings.effectVolume);
   generateEnemiesOnFloor();
   generateFloorBoss();
   updateEnemyStats(null);
@@ -687,9 +1032,9 @@ function updateCosts() {
   const armorCost = game.calculations.armorCost(game.player.armorTier);
   const potionCost = game.constants.potionCost;
 
-  document.getElementById('weaponCost').textContent = `Cost: ${weaponCost} gold`;
-  document.getElementById('armorCost').textContent = `Cost: ${armorCost} gold`;
-  document.getElementById('potionCost').textContent = `Cost: ${potionCost} gold`;
+  document.getElementById('weaponCost').textContent = `${weaponCost} gold`;
+  document.getElementById('armorCost').textContent = `${armorCost} gold`;
+  document.getElementById('potionCost').textContent = `${potionCost} gold`;
 }
 
   function openShop() {
@@ -784,7 +1129,6 @@ function setButtons(enable, fightBtn, runBtn) {
     loadBtn.disabled = !enable;
     exportBtn.disabled = !enable;
     importBtn.disabled = !enable;
-	resetSaveBtn.disabled = !enable;
   } catch (error) {
     handleMessage(null, false, error);
   }
@@ -797,11 +1141,11 @@ function setButtonVisibility(visible) {
   shopBtn.style.display = display;
   fightBossBtn.style.display = display;
   
+  settingsBtn.style.display = display;
   saveBtn.style.display = display;
     loadBtn.style.display = display;
     exportBtn.style.display = display;
     importBtn.style.display = display;
-	resetSaveBtn.style.display = display;
 }
 
 function saveGame(autoSave = true) {
@@ -895,9 +1239,11 @@ function resetSaveData() {
   const confirmation = confirm("Are you sure you want to reset your save data? This action cannot be undone.");
 
   if (confirmation) {
+  closeSettings();
     localStorage.removeItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
 	
     handleMessage('Save data reset successfully.');
+	
     startGame();
   }
  }
@@ -935,8 +1281,8 @@ decay = 0.14;
 sustain = 0.38;
 release = 0.18;
 lowPassStrength = 0.7;
-fadeInDuration = 0.005;
-fadeOutDuration = 0.005;
+fadeInDuration = 0.002;
+fadeOutDuration = 0.002;
 	//end of sound settings
 }
 
@@ -947,6 +1293,10 @@ async function checkAudioContext() {
 }
   
 async function playMelody(melody, volume, loop = false) {
+if (!loop && game.settings.effectVolume === 0) {
+    return;
+  }
+
   await checkAudioContext();
 
   const source = audioContext.createBufferSource();
@@ -966,6 +1316,7 @@ async function playMelody(melody, volume, loop = false) {
       loopedSource.disconnect(gainNode);
       source.onended = () => {
         loopedSource.connect(gainNode);
+		gainNode.gain.value = game.settings.trackVolume;
       };
     }
   }
@@ -1031,8 +1382,6 @@ function applyLowPassFilter(buffer, alpha) {
 }
 
 function applyADSR(buffer, sampleRate, attack, decay, sustain, release) {
-  const fadeInDuration = 0.002;
-  const fadeOutDuration = 0.002;
   const fadeInSamples = Math.round(sampleRate * fadeInDuration);
   const fadeOutSamples = Math.round(sampleRate * fadeOutDuration);
 
@@ -1058,11 +1407,68 @@ function applyADSR(buffer, sampleRate, attack, decay, sustain, release) {
   }
 }
 
+function playSoundtrack() {
+
+  const soundtrackKeys = Object.keys(game.soundTracks);
+  const randomKey = soundtrackKeys[Math.floor(Math.random() * soundtrackKeys.length)];
+  const randomTrack = game.soundTracks[randomKey];
+
+  playMelody(randomTrack, game.settings.trackVolume, true);
+}
+
+function openSettings() {
+  settingsMenu.style.display = 'block';
+  gameContainer.style.display = 'none';
+}
+
+function closeSettings() {
+  settingsMenu.style.display = 'none';
+  gameContainer.style.display = 'flex';
+}
+
+function updateTrackVolume(volume) {
+  game.settings.trackVolume = parseFloat(volume.target.value) / 100 * 0.4;
+  gainNode.gain.value = game.settings.trackVolume;
+  updateSliderValues()
+  saveSettings();
+}
+
+function updateEffectVolume(volume) {
+  game.settings.effectVolume = parseFloat(volume.target.value) / 100 * 0.4;
+  updateSliderValues();
+  saveSettings();
+}
+
+function saveSettings() {
+  localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.settings', JSON.stringify(game.settings));
+}
+
+function setSliderPositions() {
+  trackVolume.value = game.settings.trackVolume * 100 / 0.4;
+  effectVolume.value = game.settings.effectVolume * 100 / 0.4;
+}
+
+function updateSliderValues() {
+  trackVolumeValue.textContent = `${trackVolume.value}%`;
+  effectVolumeValue.textContent = `${effectVolume.value}%`;
+}
+
+function loadSettings() {
+  const storedSettings = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.settings');
+  if (storedSettings) {
+    game.settings = JSON.parse(storedSettings);
+  }
+  setSliderPositions();
+  updateSliderValues();
+}
+
 function startGame() {
+	if (!audioContext) {
+		initAudioContext();
+	}
 	titleScreen.style.display = 'none';
 	gameContainer.style.display = 'flex';
-	initAudioContext();
-	playMelody(game.soundTracks.mysteriousAmbience, 0.4, true);
+	playSoundtrack();
   
 	if (localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save') != null) {
 		loadGame();
@@ -1094,6 +1500,13 @@ exportBtn.onclick = exportSave;
 importBtn.onclick = triggerFileInput;
 fileInput.onchange = importSave;
 resetSaveBtn.onclick = resetSaveData;
+
+settingsBtn.onclick = openSettings;
+closeSettingsBtn.onclick = closeSettings;
+trackVolume.oninput = updateTrackVolume;
+effectVolume.oninput = updateEffectVolume;
+
+loadSettings();
   
 });
 </script>

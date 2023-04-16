@@ -1,1451 +1,1980 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
 <title>Descent into Darkness</title>
 <style>
-  .message-wrapper { min-height: 6em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
-  #message { margin: 0; padding: 0; }
-  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 4px; overflow-y: auto; }
-  #game { text-align: center; }
+  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 4px; overflow-y: auto; background-color: #f2f2f2; }
+  #message { min-height: 7em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
+  #gameContainer, #shop, #settingsMenu, #combatBtns, #fileInput { display: none; }
+  .button-group { display: flex; justify-content: center; align-items: center; }
   button { margin: 4px; }
-  #shop, #settingsMenu { display: none; }
-  .shop-item, .settings-item { display: inline-block; margin-right: 20px; text-align: center; }
-  input[type="range"] {
-  width: 200px;
-}
+  .shop-item, .settings-item { display: block; text-align: center; margin: 6px; }
 </style>
 </head>
 <body>
-<div id="titleScreen" style="text-align: center;">
+<div id='titleScreen' style='text-align: center;'>
   <h1>Descent into Darkness</h1>
-  <br>
-  <button id="startBtn">Die</button>
-</div>
-<div id="gameContainer" style="display: none; flex-direction: column; align-items: center;">
-  <div id="enemyStats" style="text-align: center;"></div>
-  <br>
-  <div class="message-wrapper">
-    <div id="message" style="text-align: center;"></div>
-  </div>
-  <div id="combatBtns" style="display: none;"></div>
-  <br>
-  <div id="status" style="text-align: center;"></div>
-  <br>
-  <button id="exploreBtn">Explore</button>
-  <button id="usePotionBtn">Use Potion</button>
-  <button id="fightBossBtn" disabled>Fight Boss</button>
-  <button id="shopBtn">Visit Shop</button>
-  <br>
-  <button id="settingsBtn">Settings</button>
-  <div class="button-group">
-    <button id="saveBtn">Save Game</button>
-    <button id="loadBtn">Load Game</button>
-  </div>
-  <div class="button-group">
-    <button id="exportBtn">Export Save</button>
-    <button id="importBtn">Import Save</button>
-  </div>
-  <input type="file" id="fileInput" accept=".save" style="display: none;" onchange="importSave(event);" />
+  <button id='startBtn'>Die</button>
 </div>
 
-<div id="shop" style="display: none; text-align: center;">
+<div id='gameContainer' style='flex-direction: column; align-items: center;'>
+  <div id='enemyStats' style='text-align: center;'></div>
+  <br>
+  <div id='message' style='text-align: center;'></div>
+  <div id='combatBtns'>
+    <button id='fightBtn'>Fight</button>
+    <button id='runBtn'>Run</button>
+  </div>
+  <br>
+  <div id='status' style='text-align: center;'></div>
+  <br>
+  <button id='exploreBtn'>Explore</button>
+  <div class='button-group'>
+  <button id='usePotBtn'>Use Potion</button>
+  <button id='maxPotionsBtn'>Max Potions</button>
+  </div>
+  <button id='fightBossBtn' disabled>Fight Boss</button>
+  <button id='shopBtn'>Visit Shop</button>
+  <br>
+  <button id='settingsBtn'>Settings</button>
+  <div class='button-group'>
+    <button id='saveBtn'>Save Game</button>
+    <button id='loadBtn'>Load Game</button>
+  </div>
+  <div class='button-group'>
+    <button id='exportBtn'>Export Save</button>
+    <button id='importBtn'>Import Save</button>
+  </div>
+  <input type='file' id='fileInput' accept='.save' style='display: none;' onchange='importSave(event);' />
+</div>
+
+<div id='shop' style='text-align: center;'>
   <h3>Shop</h3>
-  <br>
-  <div class="shop-item">
-    <button id="buyWeaponBtn">Buy Weapon</button>
-    <div id="weaponCost"></div>
+  <div class='button-group'>
+    <div class='shop-item'>
+      <button id='buyPotionBtn'>Buy Potion</button>
+      <div id='potionCost'></div>
+    </div>
+    <div class='shop-item'>
+      <button id='buyMaxPotionsBtn'>Max Potions</button>
+      <div id='maxPotionCost'></div>
+    </div>
   </div>
-  <div class="shop-item">
-    <button id="buyArmorBtn">Buy Armor</button>
-    <div id="armorCost"></div>
-  </div>
-  <div class="shop-item">
-    <button id="buyPotionBtn">Buy Potion</button>
-    <div id="potionCost"></div>
+  <div class='button-group'>
+    <div class='shop-item'>
+      <button id='buyWeaponBtn'>Buy Weapon</button>
+      <div id='weaponCost'></div>
+    </div>
+    <div class='shop-item'>
+      <button id='buyArmorBtn'>Buy Armor</button>
+      <div id='armorCost'></div>
+    </div>
   </div>
   <br>
-  <br>
-  <button id="closeShopBtn">Close Shop</button>
+  <button id='closeShopBtn'>Close Shop</button>
 </div>
 
-<div id="settingsMenu" style="display: none; text-align: center;">
+<div id='settingsMenu' style='text-align: center;'>
   <h3>Settings</h3>
-  <br>
-  <div class="settings-item">
-    <label for="trackVolume">Soundtrack Volume:</label>
-	<span id="trackVolumeValue"></span>
+  <div class='settings-item'>
+    <label for='trackVolume'>Soundtrack Volume:</label>
+	<span id='trackVolumeValue'></span>
 	<br>
-    <input type="range" id="trackVolume" min="0" max="100" value="50">
+    <input type='range' id='trackVolume' min='0' max='100' value='50'>
+  </div>
+  <div class='settings-item'>
+    <label for='effectVolume'>Sound Effect Volume:</label>
+	<span id='effectVolumeValue'></span>
+	<br>
+    <input type='range' id='effectVolume' min='0' max='100' value='50'>
   </div>
   <br>
-  <div class="settings-item">
-    <label for="effectVolume">Sound Effect Volume:</label>
-	<span id="effectVolumeValue"></span>
-	<br>
-    <input type="range" id="effectVolume" min="0" max="100" value="50">
-  </div>
+  <button id='resetSaveBtn'>Reset Save Data</button>
   <br>
   <br>
-  <button id="resetSaveBtn">Reset Save Data</button>
-  <br>
-  <br>
-  <button id="closeSettingsBtn">Close Settings</button>
+  <button id='closeSettingsBtn'>Close Settings</button>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
+const el = id => document.getElementById(id);
+const titleScreen = el('titleScreen');
+const gameContainer = el('gameContainer');
+const startBtn = el('startBtn');
+const message = el('message');
+const status = el('status');
+const exploreBtn = el('exploreBtn');
+const usePotBtn = el('usePotBtn');
+const maxPotionsBtn = el('maxPotionsBtn');
+const shopBtn = el('shopBtn');
+const shop = el('shop');
+const buyWeaponBtn = el('buyWeaponBtn');
+const buyArmorBtn = el('buyArmorBtn');
+const buyPotionBtn = el('buyPotionBtn');
+const buyMaxPotionsBtn = el('buyMaxPotionsBtn');
+const closeShopBtn = el('closeShopBtn');
+const fightBossBtn = el('fightBossBtn');
+const enemyStats = el('enemyStats');
+const combatBtns = el('combatBtns');
+const saveBtn = el('saveBtn');
+const loadBtn = el('loadBtn');
+const exportBtn = el('exportBtn');
+const importBtn = el('importBtn');
+const fileInput = el('fileInput');
+const resetSaveBtn = el('resetSaveBtn');
+const settingsMenu = el('settingsMenu');
+const settingsBtn = el('settingsBtn');
+const closeSettingsBtn = el('closeSettingsBtn');
+const trackVolume = el('trackVolume');
+const effectVolume = el('effectVolume');
+const trackVolumeValue = el('trackVolumeValue');
+const effectVolumeValue = el('effectVolumeValue');
+
+
 const game = (() => {
-  const el = id => document.getElementById(id);
-
-  return {
-  titleScreen: el('titleScreen'),
- gameContainer: el('gameContainer'),
-startBtn: el('startBtn'),
-    message: el('message'),
-    status: el('status'),
-    exploreBtn: el('exploreBtn'),
-    usePotionBtn: el('usePotionBtn'),
-    shopBtn: el('shopBtn'),
-    shop: el('shop'),
-    buyWeaponBtn: el('buyWeaponBtn'),
-    buyArmorBtn: el('buyArmorBtn'),
-    buyPotionBtn: el('buyPotionBtn'),
-    closeShopBtn: el('closeShopBtn'),
-    fightBossBtn: el('fightBossBtn'),
-    enemyStats: el('enemyStats'),
-	combatBtns: el('combatBtns'),
-	saveBtn: el('saveBtn'),
-	loadBtn: el('loadBtn'),
-	exportBtn: el('exportBtn'),
-	importBtn: el('importBtn'),
-	fileInput: el('fileInput'),
-	resetSaveBtn: el('resetSaveBtn'),
-	settingsMenu: el('settingsMenu'),
-	settingsBtn: el('settingsBtn'),
-closeSettingsBtn: el('closeSettingsBtn'),
-trackVolume: el('trackVolume'),
-effectVolume: el('effectVolume'),
-trackVolumeValue: el('trackVolumeValue'),
-effectVolumeValue: el('effectVolumeValue'),
 	
-	soundTracks: {
-	mysteriousAmbience: [
-	['C3', 0.5], ['G3', 0.5], ['C4', 0.5], ['E4', 0.5],
-	['A2', 0.5], ['E3', 0.5], ['A3', 0.5], ['C#4', 0.5],
-	['D3', 0.5], ['A3', 0.5], ['D4', 0.5], ['F#4', 0.5],
-	['G2', 0.5], ['D3', 0.5], ['G3', 0.5], ['B3', 0.5]
-	],
-	
-epicAdventure: [
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
-    ['F3', 0.4], ['A3', 0.4], ['C4', 0.4], ['F4', 0.4], ['C4', 0.4], ['A3', 0.4],
-    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
-
-    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
-    ['F3', 0.4], ['A3', 0.4], ['C4', 0.4], ['F4', 0.4], ['C4', 0.4], ['A3', 0.4],
-    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
-  ],
-  
-  darkMysticJourney: [
-    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
-    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
-
-    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
-    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
-
-    ['F2', 0.4], ['C3', 0.4], ['F3', 0.8], ['A3', 0.8], ['E2', 0.4], ['B2', 0.4], ['E3', 0.8], ['G#3', 0.8],
-    ['G2', 0.4], ['D3', 0.4], ['G3', 0.8], ['B3', 0.8], ['A2', 0.4], ['E3', 0.4], ['A3', 0.8], ['C#4', 0.8],
-  ],
-  
-  forgottenKingdoms: [
-
-    ['C3', 0.4], ['E3', 0.4], ['G3', 0.8], ['C4', 0.8], ['G3', 0.4], ['E3', 0.4],
-    ['A2', 0.4], ['D3', 0.4], ['F3', 0.8], ['A3', 0.8], ['F3', 0.4], ['D3', 0.4],
-    ['D#2', 0.4], ['G2', 0.4], ['A#2', 0.8], ['D#3', 0.8], ['A#2', 0.4], ['G2', 0.4],
-    ['G2', 0.4], ['C3', 0.4], ['D#3', 0.8], ['G3', 0.8], ['D#3', 0.4], ['C3', 0.4],
-  ],
-
-legendaryBanger: [
-    ['E4', 0.2], ['G4', 0.2], ['B4', 0.2], ['E5', 0.2], ['B4', 0.2], ['G4', 0.2],
-    ['C5', 0.2], ['E5', 0.2], ['G5', 0.2], ['C6', 0.2], ['G5', 0.2], ['E5', 0.2],
-    ['B4', 0.2], ['D5', 0.2], ['F#5', 0.2], ['B5', 0.2], ['F#5', 0.2], ['D5', 0.2],
-    ['G4', 0.2], ['B4', 0.2], ['D5', 0.2], ['G5', 0.2], ['D5', 0.2], ['B4', 0.2],
-],
-  
-DarkMystique: [
-    ['E3', 0.2], ['G3', 0.2], ['B3', 0.2], ['E4', 0.2], ['B3', 0.2], ['G3', 0.2],
-    ['C4', 0.2], ['E4', 0.2], ['G4', 0.2], ['C5', 0.2], ['G4', 0.2], ['E4', 0.2],
-    ['B3', 0.2], ['D4', 0.2], ['F#4', 0.2], ['B4', 0.2], ['F#4', 0.2], ['D4', 0.2],
-    ['G3', 0.2], ['B3', 0.2], ['D4', 0.2], ['G4', 0.2], ['D4', 0.2], ['B3', 0.2],
-],
-
-dungeonDelverAnthem: [
-    ['C4', 0.25], ['G3', 0.25], ['E4', 0.5], ['G4', 0.5],
-    ['C5', 0.25], ['G4', 0.25], ['E4', 0.5], ['C4', 0.5],
-
-    ['A3', 0.25], ['E3', 0.25], ['C4', 0.5], ['E4', 0.5],
-    ['A4', 0.25], ['E4', 0.25], ['C4', 0.5], ['A3', 0.5],
-
-    ['D4', 0.25], ['A3', 0.25], ['F4', 0.5], ['A4', 0.5],
-    ['D5', 0.25], ['A4', 0.25], ['F4', 0.5], ['D4', 0.5],
-
-    ['G4', 0.25], ['D4', 0.25], ['B3', 0.5], ['D4', 0.5],
-    ['G4', 0.25], ['D4', 0.25], ['B3', 0.5], ['G3', 0.5],
-  ],
-
-  fantasySaga: [
-    ['C4', 0.4], ['G4', 0.4], ['E4', 0.4], ['G4', 0.4],
-    ['C5', 0.4], ['G4', 0.4], ['E4', 0.4], ['C4', 0.4],
-
-    ['A3', 0.4], ['E4', 0.4], ['C4', 0.4], ['E4', 0.4],
-    ['A4', 0.4], ['E4', 0.4], ['C4', 0.4], ['A3', 0.4],
-
-    ['D4', 0.4], ['A4', 0.4], ['F4', 0.4], ['A4', 0.4],
-    ['D5', 0.4], ['A4', 0.4], ['F4', 0.4], ['D4', 0.4],
-	],
-	
-	dungeonCrusader: [
-    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['E5', 0.6], ['B4', 0.3], ['G4', 0.3],
-    ['C5', 0.3], ['E5', 0.3], ['G5', 0.6], ['C6', 0.6], ['G5', 0.3], ['E5', 0.3],
-
-    ['B4', 0.3], ['D5', 0.3], ['F#5', 0.6], ['B5', 0.6], ['F#5', 0.3], ['D5', 0.3],
-    ['G4', 0.3], ['B4', 0.3], ['D5', 0.6], ['G5', 0.6], ['D5', 0.3], ['B4', 0.3],
-  ],
-  
-  shadowSlayer: [
-    ['E4', 0.4], ['G4', 0.4], ['B4', 0.8], ['G4', 0.4], ['E4', 0.4], ['B3', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.8], ['F#4', 0.4], ['D4', 0.4], ['A3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.8], ['E4', 0.4], ['C4', 0.4], ['G3', 0.4],
-    ['B3', 0.4], ['D4', 0.4], ['F#4', 0.8], ['D4', 0.4], ['B3', 0.4], ['F#3', 0.4],
-
-    ['E4', 0.4], ['G4', 0.4], ['C5', 0.8], ['G4', 0.4], ['E4', 0.4], ['C4', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['B4', 0.8], ['F#4', 0.4], ['D4', 0.4], ['B3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['A4', 0.8], ['E4', 0.4], ['C4', 0.4], ['A3', 0.4],
-    ['B3', 0.4], ['D4', 0.4], ['G4', 0.8], ['D4', 0.4], ['B3', 0.4], ['G3', 0.4],
-  ],
-
-arcaneLabyrinth: [
-    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['A4', 0.3], ['G4', 0.3], ['E4', 0.6],
-    ['D4', 0.3], ['F#4', 0.3], ['A4', 0.6], ['G4', 0.3], ['F#4', 0.3], ['D4', 0.6],
-
-    ['C4', 0.3], ['E4', 0.3], ['G4', 0.6], ['F#4', 0.3], ['E4', 0.3], ['C4', 0.6],
-    ['B3', 0.3], ['D4', 0.3], ['F#4', 0.6], ['E4', 0.3], ['D4', 0.3], ['B3', 0.6],
-  ],
-  
-  arcaneMaze: [
-    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E4', 0.4], ['B3', 0.4], ['E3', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D4', 0.4], ['A3', 0.4], ['D3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C4', 0.4], ['G3', 0.4], ['C3', 0.4],
-    ['B3', 0.4], ['D4', 0.4], ['F#4', 0.4], ['B3', 0.4], ['F#3', 0.4], ['B2', 0.4],
-
-    ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['E4', 0.4], ['C4', 0.4], ['E3', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['B4', 0.4], ['D4', 0.4], ['B3', 0.4], ['D3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['C4', 0.4], ['A3', 0.4], ['C3', 0.4],
-    ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['B3', 0.4], ['G3', 0.4], ['B2', 0.4],
-  ],
-  
-  crypticLabyrinth: [
-    ['G4', 0.3], ['E4', 0.3], ['D4', 0.6], ['B3', 0.3], ['G3', 0.3], ['E3', 0.3],
-    ['A3', 0.2], ['C4', 0.2], ['E4', 0.4], ['A4', 0.6], ['E4', 0.2], ['C4', 0.2],
-
-    ['F4', 0.4], ['D4', 0.4], ['C4', 0.4], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3],
-    ['G3', 0.2], ['B3', 0.2], ['D4', 0.4], ['G4', 0.6], ['D4', 0.2], ['B3', 0.2],
-
-    ['E4', 0.3], ['G4', 0.3], ['B4', 0.3], ['E5', 0.3], ['B4', 0.3], ['G4', 0.3],
-    ['A4', 0.2], ['C5', 0.2], ['E5', 0.4], ['A5', 0.6], ['E5', 0.2], ['C5', 0.2],
-
-    ['F4', 0.4], ['A4', 0.4], ['C5', 0.4], ['F5', 0.3], ['C5', 0.3], ['A4', 0.3],
-    ['G4', 0.2], ['B4', 0.2], ['D5', 0.4], ['G5', 0.6], ['D5', 0.2], ['B4', 0.2],
-  ],
-  
-  shadowyAbyss: [
-    ['E4', 0.3], ['C4', 0.3], ['B3', 0.6], ['G3', 0.3], ['E3', 0.3], ['C3', 0.3],
-    ['F3', 0.2], ['A3', 0.2], ['C4', 0.4], ['F4', 0.6], ['C4', 0.2], ['A3', 0.2],
-
-    ['G4', 0.4], ['E4', 0.4], ['D4', 0.4], ['B3', 0.3], ['G3', 0.3], ['E3', 0.3],
-    ['A3', 0.2], ['C4', 0.2], ['E4', 0.4], ['A4', 0.6], ['E4', 0.2], ['C4', 0.2],
-
-    ['D4', 0.3], ['B3', 0.3], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3], ['B2', 0.3],
-    ['E3', 0.2], ['G3', 0.2], ['B3', 0.4], ['E4', 0.6], ['B3', 0.2], ['G3', 0.2],
-
-    ['F4', 0.4], ['D4', 0.4], ['C4', 0.4], ['A3', 0.3], ['F3', 0.3], ['D3', 0.3],
-    ['G3', 0.2], ['B3', 0.2], ['D4', 0.4], ['G4', 0.6], ['D4', 0.2], ['B3', 0.2],
-  ],
-  
-  arcaneInferno: [
-    ['E4', 0.3], ['G4', 0.3], ['B4', 0.6], ['E5', 0.3], ['C5', 0.3], ['A4', 0.3],
-    ['D4', 0.2], ['F4', 0.2], ['A4', 0.4], ['D5', 0.6], ['A4', 0.2], ['F4', 0.2],
-
-    ['G4', 0.4], ['B4', 0.4], ['D5', 0.4], ['G5', 0.3], ['E5', 0.3], ['C5', 0.3],
-    ['F4', 0.2], ['A4', 0.2], ['C5', 0.4], ['F5', 0.6], ['C5', 0.2], ['A4', 0.2],
-
-    ['E5', 0.3], ['C5', 0.3], ['A4', 0.3], ['E4', 0.3], ['G4', 0.3], ['B4', 0.3],
-    ['D5', 0.2], ['B4', 0.2], ['G4', 0.4], ['D4', 0.6], ['G4', 0.2], ['B4', 0.2],
-
-    ['C5', 0.4], ['A4', 0.4], ['F4', 0.4], ['C4', 0.3], ['E4', 0.3], ['G4', 0.3],
-    ['A4', 0.2], ['F4', 0.2], ['D4', 0.4], ['A3', 0.6], ['D4', 0.2], ['F4', 0.2],
-  ],
-  
-  endlessArcade: [
-    ['C4', 0.3], ['E4', 0.3], ['G4', 0.3], ['C5', 0.3], ['G4', 0.3], ['E4', 0.3],
-	['C5', 0.3], ['A4', 0.3], ['E4', 0.3], ['C4', 0.3], ['G3', 0.3], ['E3', 0.3],
-	
-    ['A3', 0.3], ['C4', 0.3], ['E4', 0.3], ['A4', 0.3], ['E4', 0.3], ['C4', 0.3],
-	['F4', 0.3], ['D4', 0.3], ['A3', 0.3], ['F3', 0.3], ['C3', 0.3], ['A2', 0.3],
-
-    ['D4', 0.3], ['F4', 0.3], ['A4', 0.3], ['D5', 0.3], ['A4', 0.3], ['F4', 0.3],
-	['G4', 0.3], ['E4', 0.3], ['C4', 0.3], ['G3', 0.3], ['D3', 0.3], ['B2', 0.3],
-	
-    ['G3', 0.3], ['B3', 0.3], ['D4', 0.3], ['G4', 0.3], ['D4', 0.3], ['B3', 0.3],    
-    ['A4', 0.3], ['F4', 0.3], ['D4', 0.3], ['A3', 0.3], ['E3', 0.3], ['C3', 0.3],
-  ],
-  
-  arcaneLabyrinth2: [
-    ['G4', 0.4], ['E4', 0.4], ['C4', 0.4], ['G3', 0.4], ['C4', 0.4], ['E4', 0.4],
-    ['F4', 0.4], ['D4', 0.4], ['B3', 0.4], ['F3', 0.4], ['B3', 0.4], ['D4', 0.4],
-
-    ['E4', 0.4], ['C4', 0.4], ['A3', 0.4], ['E3', 0.4], ['A3', 0.4], ['C4', 0.4],
-    ['D4', 0.4], ['B3', 0.4], ['G3', 0.4], ['D3', 0.4], ['G3', 0.4], ['B3', 0.4],
-
-    ['C4', 0.4], ['A3', 0.4], ['E3', 0.4], ['C3', 0.4], ['E3', 0.4], ['A3', 0.4],
-    ['B3', 0.4], ['G3', 0.4], ['D3', 0.4], ['B2', 0.4], ['D3', 0.4], ['G3', 0.4],
-
-    ['A3', 0.4], ['F3', 0.4], ['C3', 0.4], ['A2', 0.4], ['C3', 0.4], ['F3', 0.4],
-    ['G3', 0.4], ['E3', 0.4], ['C3', 0.4], ['G2', 0.4], ['C3', 0.4], ['E3', 0.4],
-  ],
-  
-  arcaneWhispers: [
-    ['C4', 0.3], ['E4', 0.5], ['G4', 0.7], ['C5', 0.5], ['G4', 0.3], ['E4', 0.5],
-    ['A3', 0.3], ['C4', 0.5], ['E4', 0.7], ['A4', 0.5], ['E4', 0.3], ['C4', 0.5],
-
-    ['F3', 0.3], ['A3', 0.5], ['C4', 0.7], ['F4', 0.5], ['C4', 0.3], ['A3', 0.5],
-    ['G3', 0.3], ['B3', 0.5], ['D4', 0.7], ['G4', 0.5], ['D4', 0.3], ['B3', 0.5],
-
-    ['E4', 0.3], ['G4', 0.5], ['B4', 0.7], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
-    ['D4', 0.3], ['F#4', 0.5], ['A4', 0.7], ['D5', 0.5], ['A4', 0.3], ['F#4', 0.5],
-
-    ['C4', 0.3], ['E4', 0.5], ['G4', 0.7], ['C5', 0.5], ['G4', 0.3], ['E4', 0.5],
-    ['G3', 0.3], ['B3', 0.5], ['D4', 0.7], ['G4', 0.5], ['D4', 0.3], ['B3', 0.5],
-  ],
-  
-  enigmaticRiddle: [
-    ['D4', 0.4], ['F#4', 0.6], ['A4', 0.4], ['D5', 0.6], ['A4', 0.4], ['F#4', 0.6],
-    ['G4', 0.4], ['B4', 0.6], ['D5', 0.4], ['G5', 0.6], ['D5', 0.4], ['B4', 0.6],
-
-    ['A4', 0.4], ['C5', 0.6], ['E5', 0.4], ['A5', 0.6], ['E5', 0.4], ['C5', 0.6],
-    ['E4', 0.4], ['G4', 0.6], ['B4', 0.4], ['E5', 0.6], ['B4', 0.4], ['G4', 0.6],
-
-    ['C5', 0.4], ['E5', 0.6], ['G5', 0.4], ['C6', 0.6], ['G5', 0.4], ['E5', 0.6],
-    ['F4', 0.4], ['A4', 0.6], ['C5', 0.4], ['F5', 0.6], ['C5', 0.4], ['A4', 0.6],
-
-    ['B4', 0.4], ['D5', 0.6], ['F#5', 0.4], ['B5', 0.6], ['F#5', 0.4], ['D5', 0.6],
-    ['G4', 0.4], ['B4', 0.6], ['D5', 0.4], ['G5', 0.6], ['D5', 0.4], ['B4', 0.6],
-  ],
-  
-  arcanePulse: [
-    ['F4', 0.5], ['A4', 0.7], ['C5', 0.5], ['F5', 0.7], ['C5', 0.5], ['A4', 0.7],
-    ['G4', 0.5], ['B4', 0.7], ['D5', 0.5], ['G5', 0.7], ['D5', 0.5], ['B4', 0.7],
-
-    ['A4', 0.5], ['C5', 0.7], ['E5', 0.5], ['A5', 0.7], ['E5', 0.5], ['C5', 0.7],
-    ['E4', 0.5], ['G4', 0.7], ['B4', 0.5], ['E5', 0.7], ['B4', 0.5], ['G4', 0.7],
-
-    ['C5', 0.5], ['E5', 0.7], ['G5', 0.5], ['C6', 0.7], ['G5', 0.5], ['E5', 0.7],
-    ['F4', 0.5], ['A4', 0.7], ['C5', 0.5], ['F5', 0.7], ['C5', 0.5], ['A4', 0.7],
-
-    ['B4', 0.5], ['D5', 0.7], ['F#5', 0.5], ['B5', 0.7], ['F#5', 0.5], ['D5', 0.7],
-    ['G4', 0.5], ['B4', 0.7], ['D5', 0.5], ['G5', 0.7], ['D5', 0.5], ['B4', 0.7],
-  ],
-  
-  arcaneSpiral: [
-    ['G4', 0.4], ['B4', 0.5], ['D5', 0.6], ['G5', 0.5], ['D5', 0.6], ['B4', 0.5],
-    ['A4', 0.4], ['C5', 0.5], ['E5', 0.6], ['A5', 0.5], ['E5', 0.6], ['C5', 0.5],
-
-    ['F4', 0.4], ['A4', 0.5], ['C5', 0.6], ['F5', 0.5], ['C5', 0.6], ['A4', 0.5],
-    ['E4', 0.4], ['G4', 0.5], ['B4', 0.6], ['E5', 0.5], ['B4', 0.6], ['G4', 0.5],
-
-    ['C5', 0.4], ['E5', 0.5], ['G5', 0.6], ['C6', 0.5], ['G5', 0.6], ['E5', 0.5],
-    ['F4', 0.4], ['A4', 0.5], ['C5', 0.6], ['F5', 0.5], ['C5', 0.6], ['A4', 0.5],
-
-    ['B4', 0.4], ['D5', 0.5], ['F#5', 0.6], ['B5', 0.5], ['F#5', 0.6], ['D5', 0.5],
-    ['G4', 0.4], ['B4', 0.5], ['D5', 0.6], ['G5', 0.5], ['D5', 0.6], ['B4', 0.5],
-  ],
-  
-  arcaneWanderer: [
-    ['F4', 0.3], ['A4', 0.5], ['C5', 0.3], ['F5', 0.5], ['C5', 0.3], ['A4', 0.5],
-    ['G4', 0.3], ['B4', 0.5], ['D5', 0.3], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
-
-    ['A4', 0.3], ['C5', 0.5], ['E5', 0.3], ['A5', 0.5], ['E5', 0.3], ['C5', 0.5],
-    ['E4', 0.3], ['G4', 0.5], ['B4', 0.3], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
-
-    ['C5', 0.5], ['E5', 0.3], ['G5', 0.5], ['C6', 0.3], ['G5', 0.5], ['E5', 0.3],
-    ['F4', 0.5], ['A4', 0.3], ['C5', 0.5], ['F5', 0.3], ['C5', 0.5], ['A4', 0.3],
-
-    ['B4', 0.5], ['D5', 0.3], ['F#5', 0.5], ['B5', 0.3], ['F#5', 0.5], ['D5', 0.3],
-    ['G4', 0.5], ['B4', 0.3], ['D5', 0.5], ['G5', 0.3], ['D5', 0.5], ['B4', 0.3],
-  ],
-  
-  arcaneMaze2: [
-    ['D4', 0.3], ['F#4', 0.5], ['A4', 0.7], ['D5', 0.5], ['A4', 0.3], ['F#4', 0.5],
-    ['G4', 0.3], ['B4', 0.5], ['D5', 0.7], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
-
-    ['A4', 0.3], ['C5', 0.5], ['E5', 0.7], ['A5', 0.5], ['E5', 0.3], ['C5', 0.5],
-    ['E4', 0.3], ['G4', 0.5], ['B4', 0.7], ['E5', 0.5], ['B4', 0.3], ['G4', 0.5],
-
-    ['C5', 0.3], ['E5', 0.5], ['G5', 0.7], ['C6', 0.5], ['G5', 0.3], ['E5', 0.5],
-    ['F4', 0.3], ['A4', 0.5], ['C5', 0.7], ['F5', 0.5], ['C5', 0.3], ['A4', 0.5],
-
-    ['B4', 0.3], ['D5', 0.5], ['F#5', 0.7], ['B5', 0.5], ['F#5', 0.3], ['D5', 0.5],
-    ['G4', 0.3], ['B4', 0.5], ['D5', 0.7], ['G5', 0.5], ['D5', 0.3], ['B4', 0.5],
-  ],
-
-arcaneChronicles: [
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
-
-    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
-    ['A3', 0.4], ['C4', 0.4], ['E4', 0.4], ['A4', 0.4], ['E4', 0.4], ['C4', 0.4],
-
-    ['D4', 0.4], ['F4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F4', 0.4],
-    ['G3', 0.4], ['B3', 0.4], ['D4', 0.4], ['G4', 0.4], ['D4', 0.4], ['B3', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['D4', 0.4], ['F#4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F#4', 0.4],
-  ],
-  
-  shadowsOfTheAbyss: [
-    ['D4', 0.4], ['F4', 0.4], ['A4', 0.4], ['D5', 0.4], ['A4', 0.4], ['F4', 0.4],
-    ['E4', 0.4], ['G4', 0.4], ['B4', 0.4], ['E5', 0.4], ['B4', 0.4], ['G4', 0.4],
-
-    ['C4', 0.4], ['E4', 0.4], ['G4', 0.4], ['C5', 0.4], ['G4', 0.4], ['E4', 0.4],
-    ['F4', 0.4], ['A4', 0.4], ['C5', 0.4], ['F5', 0.4], ['C5', 0.4], ['A4', 0.4],
-
-    ['G4', 0.4], ['B4', 0.4], ['D5', 0.4], ['G5', 0.4], ['D5', 0.4], ['B4', 0.4],
-    ['A4', 0.4], ['C5', 0.4], ['E5', 0.4], ['A5', 0.4], ['E5', 0.4], ['C5', 0.4],
-  ],
-
-
-
-	},
+	return {
 	soundEffects: {
-  victory: [['C5', 0.1], ['E5', 0.1], ['G5', 0.1], ['B5', 0.1], ['D6', 0.1], ['C6', 0.1]],
-  levelUp: [['G4', 0.2], ['D#5', 0.2], ['G5', 0.2], ['C6', 0.2], ['D#6', 0.2], ['G6', 0.2]],
-  nextFloor: [['A3', 0.3], ['E4', 0.3], ['A4', 0.3], ['E5', 0.3]],
-},
+		victory: {
+        bpm: 120,
+        notes: ["C4", "E4", "G4", "B4", "D5", "C5"]
+    },
+    levelUp: {
+        bpm: 60,
+        notes: ["G3", "D#4", "G4", "C5", "D#5", "G5"]
+    },
+    nextFloor: {
+        bpm: 40,
+        notes: ["A2", "E3", "A3", "E3"]
+    },
+    playerDeath: {
+        bpm: 80,
+        notes: ["C2", "G2", "C3", "G3", "C4", "C3", "G2", "C2"]
+    }
+	},
 	
 	text: {
 		startGame: [
 			"You wake up in a dark, unfamiliar place...<br>Unarmed and dressed in rags...<br>Decrepit skeletons scattered across the floor...<br>You must find a way out of this place...",
-			  "Darkness surrounds you...<br>Clad in tattered rags, you shiver...<br>Bones litter the ground...<br>A desperate search for escape begins...",
+			"Darkness surrounds you...<br>Clad in tattered rags, you shiver...<br>Bones litter the ground...<br>A desperate search for escape begins...",
   "In the cold, black void you awaken...<br>Wearing only ragged clothes...<br>Skeletal remains scattered nearby...<br>You must flee this forsaken place...",
-  "You find yourself in inky shadows...<br>Dressed in mere scraps...<br>Grinning skulls stare back at you...<br>A desperate escape is your only hope..."
-
+  "You find yourself in inky shadows...<br>Dressed in mere scraps...<br>Grinning skulls stare back at you...<br>A desperate escape is your only hope...",
+    "The void stirs as you open your eyes...<br>Wrapped in tattered cloth...<br>A graveyard of bones surrounds you...<br>Find your way out or perish...",
+    "As darkness recedes, you awaken...<br>Clothed in frayed vestments...<br>A chilling sight greets you...<br>Fight for your escape...",
+	"Awakening in cold, unyielding darkness...<br>Clad in tattered garments...<br>A sea of bones surrounds you...<br>Escape or succumb to the shadows...",
+    "You emerge from slumber in a murky crypt...<br>Wearing threadbare rags...<br>Skeletal remnants scattered about...<br>Survive and flee this wretched place...",
+    "You awaken in the gloom, shivering...<br>Dressed in worn, ragged attire...<br>Surrounded by lifeless remains...<br>Seek a way out or perish...",
+    "Rising from the blackness, disoriented...<br>Clad in weathered rags...<br>Skulls and bones abound...<br>Desperation fuels your escape...",
+    "You find yourself in a cryptic chamber...<br>Garbed in tattered cloth...<br>Bones strewn about like macabre confetti...<br>Find the exit or join the fallen...",
+    "The darkness releases you, bleary-eyed...<br>Clothed in frayed remnants...<br>A graveyard of skeletons awaits...<br>Struggle for freedom or face oblivion...",
+    "You rouse from a restless sleep...<br>Wearing tattered scraps...<br>Surrounded by skeletal remnants...<br>Forge a path to freedom or perish...",
+    "In the shadows, you stir...<br>Dressed in worn, ragged clothes...<br>Death's evidence surrounds you...<br>Escape the darkness or be consumed...",
+    "You awaken amidst an ocean of darkness...<br>Clad in disheveled attire...<br>Lifeless bones scattered around...<br>Seek the light or dwell in darkness...",
+    "Eyes opening to a shroud of blackness...<br>Garbed in threadbare rags...<br>The crypt's chilling denizens surround you...<br>Fight to escape the abyss...",
 		],
 		loadGame: [
   "As the shadows part, your memories resurface...<br>Once more, you stand amidst the darkness...",
   "The veil of darkness lifts, revealing a familiar scene...<br>You return to the heart of the crypt...",
   "The murky haze dissipates, and your journey resumes...<br>Darkness and secrets surround you once again...",
   "A shroud of blackness retreats, and the crypt re-emerges...<br>Your quest continues, fraught with peril...",
-  "Emerging from the abyss, your senses return...<br>The crypt's mysteries await your exploration..."
+  "Emerging from the abyss, your senses return...<br>The crypt's mysteries await your exploration...",
+  "As the gloom recedes, your memories awaken...<br>The crypt's depths welcome you back...",
+    "The shadowy veil dissipates, and you stand ready...<br>Once more, the crypt beckons...",
+    "Darkness retreats, unveiling familiar surroundings...<br>Your journey in the crypt resumes...",
+    "The black fog clears, revealing the crypt's hidden paths...<br>Determination fuels your return...",
+    "Emerging from darkness, your purpose reignites...<br>The crypt's mysteries call out to you...",
+	"As darkness yields, your resolve strengthens...<br>The crypt awaits your return...",
+    "The shadows recede, revealing your path...<br>Once again, you venture into the unknown...",
+    "The veil of night lifts, and you resume your quest...<br>Within the crypt, secrets remain...",
+    "Darkness withdraws, your journey beckons...<br>The crypt's depths call to you...",
+    "As the gloom dissipates, your memories awaken...<br>Your path through the crypt unfolds...",
+    "The shadows vanish, your purpose renewed...<br>Into the crypt's depths, you plunge...",
+    "As the darkness wanes, you forge onward...<br>The crypt's mysteries await...",
+    "The black haze clears, and you step forward...<br>With determination, you navigate the crypt...",
+	"As the darkness recedes, your purpose rekindles...<br>The crypt's enigmas demand your attention...",
+    "Emerging from the void, your vision clears...<br>The crypt's labyrinthine paths call to you...",
+    "The shadows lift, and your resolve intensifies...<br>Once more, you brave the crypt's depths...",
+    "Darkness dissipates, revealing the crypt's secrets...<br>With determination, you continue your quest...",
+    "As the gloom clears, your journey resumes...<br>Plunging further into the crypt's mysteries...",
+	"As shadows disperse, your memory stirs...<br>Into the crypt's darkness, you venture once more...",
+    "The dark veil lifts, exposing a familiar world...<br>Returning to the crypt's enigmatic embrace...",
+    "Gloom recedes, and your path is revealed...<br>The crypt's depths beckon once again...",
+    "The black mist fades, unveiling the crypt's secrets...<br>Your journey through the darkness resumes...",
+    "Emerging from the void, your mind sharpens...<br>The crypt's challenges call to you...",
+    "As the darkness ebbs, your spirit reawakens...<br>You delve deeper into the crypt's mysteries...",
+    "The shadows retreat, disclosing your path...<br>Your exploration of the crypt continues...",
+    "Darkness vanishes, and the crypt reappears...<br>With renewed vigor, you pursue its secrets...",
+    "As the gloom clears, your journey unfolds...<br>The crypt's hidden paths entice you...",
+    "The dark haze dissipates, and your quest resumes...<br>Facing the crypt's enigmas with courage...",
+    "Emerging from the shadows, your focus sharpens...<br>The crypt's depths summon you...",
+    "As the darkness fades, your path reemerges...<br>Once again, you brave the crypt's labyrinth...",
+    "The veil of obscurity lifts, exposing the crypt...<br>With determination, you seek its hidden truths...",
+    "Shadows disperse, and your senses awaken...<br>The crypt's challenges demand your attention...",
+    "Darkness gives way, revealing your surroundings...<br>Into the crypt's depths, you forge ahead...",
 ],
 		defeatBoss: [
   "The fallen foe crumbles to dust before your eyes...<br>A sense of triumph courses through your veins...",
   "As the dark entity's final breath escapes its lips...<br>Victory and relief wash over you...",
-  "The malevolent being collapses, vanquished...<br>You stand victorious amidst the darkness..."
+  "The malevolent being collapses, vanquished...<br>You stand victorious amidst the darkness...",
+   "The mighty adversary falls, defeated...<br>A triumphant roar escapes your lips...",
+    "The monstrous foe crumbles before you...<br>Your courage and skill rewarded...",
+    "As the fearsome beast lies vanquished...<br>You bask in the glory of your hard-won victory...",
+    "The tyrant's reign ends, defeated by your hand...<br>A surge of pride fills your heart...",
+    "The great enemy succumbs to your strength...<br>As it collapses, you feel your power swell...",
+	"With a final, crushing blow, the behemoth is vanquished...<br>Exhilaration surges through you...",
+    "The darkness recoils as the villainous foe is slain...<br>Victory is yours...",
+    "As your nemesis withers, defeated...<br>Your heart swells with pride...",
+    "The vanquished foe collapses in defeat...<br>A triumphant sense of accomplishment fills you...",
+    "The wicked oppressor falls, its reign of terror ended...<br>You bask in the glow of victory...",
+	"The dreadful beast falls, succumbing to your might...<br>Relief and satisfaction surge within you...",
+    "The fearsome creature lies slain at your feet...<br>A sense of accomplishment empowers you...",
+    "The defeated adversary crumbles away...<br>Revel in the hard-fought victory...",
+    "As the darkness retreats, the fallen foe withers...<br>You stand tall, triumphant...",
+    "The vanquished enemy's form dissolves...<br>You bask in the spoils of your conquest...",
+	"The formidable foe crumbles, defeated...<br>A wave of triumph washes over you...",
+    "The monstrous adversary yields, broken...<br>Exultation fills your heart...",
+    "The dark creature withers, vanquished...<br>Your victory resounds through the crypt...",
+    "The twisted enemy falls, overcome...<br>Success and pride fuel your spirit...",
+    "The towering menace collapses, beaten...<br>You stand tall in the face of victory...",
+    "As the fearsome oppressor succumbs...<br>Your strength and courage are celebrated...",
+    "The malevolent force is broken, defeated...<br>Victorious, you bask in the glow of triumph...",
+    "The wicked enemy falters, bested...<br>A swell of achievement invigorates you...",
+    "The vile creature lies vanquished...<br>You revel in the spoils of your hard-earned victory...",
+    "The dark nemesis is silenced, defeated...<br>Your heart swells with the joy of success...",
+    "The monstrous terror falls before you...<br>Victory's sweet taste engulfs you...",
+    "The sinister foe crumbles in defeat...<br>A sense of accomplishment fills your soul...",
+    "The fearsome enemy lies beaten...<br>Triumphant, you stand amidst the chaos...",
+    "The dark lord yields to your strength...<br>Victory and relief flood your senses...",
+    "The menacing adversary topples, vanquished...<br>You bask in the euphoria of conquest...",
 ],
 		enemyEncounter: [
     "A chilling wind passes...<br>You sense a malevolent presence...<br>Your heartbeat quickens...",
     "The shadows come alive...<br>A sinister figure emerges...<br>Its eyes burn with hatred...",
-    "An eerie silence fills the air...<br>Broken by the sound of labored breathing...<br>A monstrous creature stands before you..."
+    "An eerie silence fills the air...<br>Broken by the sound of labored breathing...<br>A monstrous creature stands before you...",
+	 "A sudden chill seizes your spine...<br>An unseen threat lurks nearby...<br>Prepare for battle...",
+    "The darkness stirs, restless...<br>A malicious presence draws near...<br>Brace yourself...",
+    "The air thickens, malevolent...<br>A sinister foe emerges...<br>Steel your resolve...",
+    "Cold sweat trickles down your brow...<br>An evil adversary approaches...<br>Ready your defenses...",
+    "A heavy dread weighs upon you...<br>A wicked creature materializes...<br>Stand your ground...",
+	"The air crackles with malice...<br>A shadowy form takes shape...<br>Prepare for combat...",
+    "An oppressive gloom settles upon you...<br>An abhorrent being rises from the depths...<br>Face your fears...",
+    "The ground trembles beneath you...<br>A twisted creature bursts forth...<br>Confront the monstrosity...",
+    "A haunting whisper echoes...<br>An entity of pure hatred coalesces...<br>Defend yourself...",
+    "Your surroundings darken further...<br>An evil apparition looms before you...<br>Fight or perish...",
+	"An unsettling aura engulfs you...<br>A malevolent figure emerges...<br>Gather your courage...",
+    "The darkness pulses ominously...<br>A wicked entity appears...<br>Steady your nerves...",
+    "An icy shiver races down your spine...<br>A monstrous beast confronts you...<br>Face the challenge...",
+    "The shadows thicken, foreboding...<br>A vile creature reveals itself...<br>Prepare for the struggle...",
+    "A hushed terror fills the air...<br>A sinister presence approaches...<br>Stand firm...",
+    "An eerie calm descends...<br>A dark figure materializes...<br>Brace for impact...",
+    "The air hums with malevolence...<br>An evil foe steps forth...<br>Summon your strength...",
+    "A sudden silence chills the air...<br>A ghastly being emerges...<br>Resist its wickedness...",
+    "The atmosphere grows heavy with dread...<br>A malicious creature lunges...<br>Defy the darkness...",
+    "An unnerving hush blankets the area...<br>A sinister adversary takes shape...<br>Ready yourself for battle...",
+    "A palpable fear grips the air...<br>A twisted menace approaches...<br>Confront the terror...",
+    "The shadows grow restless...<br>An ominous being arises...<br>Prepare for the onslaught...",
+    "A cold sweat overtakes you...<br>A loathsome creature appears...<br>Gird yourself for combat...",
+    "The darkness trembles with menace...<br>A vile apparition materializes...<br>Face the nightmare...",
+    "A sinister chill envelops you...<br>A wretched foe looms...<br>Hold your ground...",
 ],
 		nothingFound: [
-    "You cautiously explore the darkness...<br>But nothing of interest catches your eye...",
     "The gloom conceals secrets yet to be discovered...<br>You find nothing...",
-    "You search high and low...<br>all you find is dust and cobwebs..."
+    "You search high and low...<br>all you find is dust and cobwebs...",
+	"You scour the darkness, vigilant...<br>But your search yields nothing...",
+    "Your eyes dart through the shadows...<br>Yet there is nothing to be found...",
+    "The blackness hides its secrets well...<br>Your efforts are fruitless...",
+    "You probe the gloom, seeking answers...<br>But none are forthcoming...",
+    "The void whispers, taunting you...<br>But offers no rewards...",
+	"You sift through the shadows...<br>Only to be met with emptiness...",
+    "You probe the darkness, hopeful...<br>But your search proves fruitless...",
+    "Your investigation yields naught...<br>The darkness holds fast to its secrets...",
+    "You delve into the void...<br>But it offers no consolation...",
+    "Despite your efforts, nothing is revealed...<br>The enigmatic darkness mocks you...",
+	"You comb the darkness, ever vigilant...<br>But your search reveals nothing...",
+    "You seek treasures hidden in the gloom...<br>Yet all remains concealed...",
+    "The darkness whispers secrets...<br>But none are within your grasp...",
+    "You scour the shadows, undeterred...<br>But your efforts remain unrewarded...",
+    "You search the void with keen eyes...<br>But nothing of value emerges...",
+    "The blackness conceals its mysteries...<br>Your pursuit yields no results...",
+    "You delve into the shadows, seeking answers...<br>But the darkness remains enigmatic...",
+    "You examine every corner of the gloom...<br>Yet your efforts go unrequited...",
+    "Your gaze pierces the darkness...<br>But the void offers no respite...",
+    "You rummage through the shadows, determined...<br>But your search bears no fruit...",
+    "The darkness conceals its riches...<br>And yields nothing to your quest...",
+    "You tirelessly probe the gloom...<br>But it remains unyielding...",
 ],
 		healingShrine: [
-    "An ethereal light emanates from a hidden shrine...<br>A sense of warmth and comfort washes over you...",
-    "A faint, otherworldly glow surrounds you...<br>As it fades, you feel rejuvenated...",
-    "Whispers echo through the shadows...<br>As if by a miracle, your wounds begin to heal..."
+    "A skeletal figure emerges, its touch healing...<br>Surprisingly, a sense of comfort envelops you...",
+    "A bone shrine radiates an eerie light...<br>As it touches you, your wounds close...",
+    "An ancient healer, its body long decayed...<br>Yet its spirit remains, mending your injuries...",
+    "A chilling touch, yet strangely soothing...<br>The skeletal healer's work restores you...",
+    "The walls are lined with skulls...<br>Whispering incantations of healing and solace...",
+    "A spectral figure of bone and sinew...<br>Its touch restores your vitality...",
+    "Skeletal hands hover over your injuries...<br>Sealing your wounds with a spectral glow...",
+    "A bony visage imparts its healing energy...<br>Reviving your strength and determination...",
+    "The shrine of bone and darkness...<br>Somehow, it mends your wounds...",
+    "A skeletal healer, its intentions pure...<br>Its touch repairs your body and calms your mind...",
+    "An otherworldly light flickers within a ribcage...<br>Healing your body and invigorating your spirit...",
+    "A ghostly hand, its touch chilling yet healing...<br>Replenishing your energy...",
+    "In the depths, a macabre shrine...<br>Its strange power rejuvenates your spirit...",
+    "A ghastly figure of bone and shadow...<br>Its healing touch banishes your pain...",
+    "An eerie glow surrounds a skeletal healer...<br>Reviving your strength and resolve...",
+	"A gentle radiance emanates from the shadows...<br>As you approach, your wounds begin to heal...",
+	"An ethereal healer, bones aglow...<br>Its spectral touch restores your vitality...",
+    "A shrine of skulls, their eyes alight...<br>As they gaze upon you, your wounds fade...",
+    "A skeletal hand extends, its touch chilling...<br>Yet your body is mended, your spirit renewed...",
+    "An ancient healer of bone and shadow...<br>Its ghostly touch weaves your wounds closed...",
+    "The crypt's darkness parts, revealing a shrine...<br>Bones flicker with light, healing your injuries...",
+    "A spectral figure, its skeletal form radiant...<br>As it reaches for you, your pain dissipates...",
+    "A shrine of bones, their whispers soothing...<br>Your wounds close, the darkness receding...",
+    "A macabre shrine, its power undeniable...<br>As skeletal hands touch you, healing ensues...",
+    "A ghostly healer, its bones gleaming...<br>As it mends your injuries, your spirit soars...",
 ],
 		bossFound: [
     "A suffocating aura of darkness envelops the room...<br>A powerful and malevolent being awaits...",
     "A sinister, commanding presence looms before you...<br>The very air around you feels heavy with dread...",
-    "An oppressive atmosphere fills the room...<br>An unspeakable terror reveals itself..."
+    "An oppressive atmosphere fills the room...<br>An unspeakable terror reveals itself...",
+	"An aura of malice pervades the chamber...<br>A formidable foe awaits...",
+    "The walls tremble with dread...<br>A monstrous terror stands before you...",
+    "An overwhelming darkness grips the room...<br>Ready yourself for the ultimate battle...",
+    "A chilling presence fills the air...<br>A titanic evil prepares to strike...",
+	"The atmosphere thickens with malice...<br>A daunting adversary emerges...",
+    "The shadows twist and coil...<br>Revealing a terrifying presence...",
+    "A sinister figure shrouded in darkness...<br>Stands as your next monumental challenge...",
+    "A chilling aura surrounds you...<br>An immense foe rises before you...",
+    "The very air trembles in fear...<br>As a monstrous enemy reveals itself...",
+	"The air crackles with dark energy...<br>A formidable presence stands before you...",
+    "An ominous aura fills the chamber...<br>A monstrous foe awaits your challenge...",
+    "The shadows pulse with dread...<br>A fearsome adversary emerges...",
+    "A tangible sense of evil permeates the room...<br>A colossal enemy confronts you...",
+    "The darkness thickens, revealing a terrifying foe...<br>Prepare for the ultimate struggle...",
+	"An air of menace fills the room...<br>A daunting presence awaits your challenge...",
+    "The ground shudders beneath your feet...<br>A colossal foe prepares for battle...",
+    "A palpable sense of dread grips the air...<br>As a formidable enemy rises...",
+    "A chilling energy radiates from the shadows...<br>A monstrous adversary stands before you...",
+    "An oppressive weight bears down upon you...<br>As a fearsome entity emerges...",
+    "A sinister laugh echoes through the chamber...<br>Revealing a horrifying foe...",
+    "A malevolent aura permeates the room...<br>An enormous enemy prepares to strike...",
+    "The darkness surges with malevolence...<br>A fearsome foe reveals itself...",
+    "An ominous presence casts a shadow over the room...<br>A powerful enemy awaits...",
+    "A paralyzing sense of dread envelops you...<br>As a terrifying creature emerges...",
+    "A dark energy courses through the chamber...<br>A formidable foe stands ready...",
+    "An overwhelming force of evil fills the room...<br>A monstrous adversary awaits...",
+    "A chilling wind sweeps through the chamber...<br>Signaling the arrival of a sinister foe...",
+    "The room seems to close in on you...<br>As a malevolent presence emerges...",
+    "A thunderous roar shakes the very walls...<br>A titanic enemy confronts you...",
 ],
 		approachBoss: [
   "The ground trembles beneath your feet...<br>An unseen force draws you towards a daunting confrontation...",
   "A sinister chill runs down your spine...<br>The path ahead leads to an inevitable clash...",
-  "Dark energy swirls around you, growing stronger...<br>A formidable adversary lies in wait..."
+  "Dark energy swirls around you, growing stronger...<br>A formidable adversary lies in wait...",
+      "A sinister force tugs at your soul...<br>Drawing you towards a fateful encounter...",
+    "A sense of foreboding darkens your path...<br>Guiding you to a terrible conflict...",
+    "As you advance, the air grows thick with tension...<br>A battle of epic proportions awaits...",
+    "The corridor narrows, the darkness thickens...<br>An adversary of great power lurks...",
+    "An ominous energy gathers, palpable...<br>A monstrous challenge lies ahead...",
+	 "Dread seeps into your heart...<br>As a formidable enemy draws near...",
+    "The air crackles with anticipation...<br>As you inch closer to a great confrontation...",
+    "A dark presence looms ahead...<br>As you prepare for the ultimate challenge...",
+    "The shadows grow darker, colder...<br>An epic battle lies before you...",
+    "Your heart races as you advance...<br>Bracing yourself for the fearsome foe...",
+	"A cold shiver runs through your body...<br>You draw near to a fearsome adversary...",
+    "As you progress, the atmosphere grows heavier...<br>An epic confrontation looms...",
+    "The darkness deepens, an ominous presence awaits...<br>Steel yourself for a titanic clash...",
+    "Your heart pounds as the darkness intensifies...<br>A tremendous foe lies in wait...",
+    "A chill grips your soul as you press forward...<br>Brace for a harrowing battle...",
+	"The darkness pulsates, a sinister force beckons...<br>As you move closer to a dreadful confrontation...",
+    "An unnerving silence descends...<br>The path leads to an ominous showdown...",
+    "A growing sense of dread grips your heart...<br>As you inch closer to a monstrous foe...",
+    "The air feels heavy, burdened by evil...<br>A titanic enemy awaits your arrival...",
+    "A malignant energy builds as you advance...<br>Guiding you towards an epic struggle...",
+    "The shadows dance and twist around you...<br>A fearsome adversary lies ahead...",
+    "A sinister whisper echoes in your ears...<br>Leading you to a daunting encounter...",
+    "A foreboding aura envelops your path...<br>A powerful enemy draws near...",
+    "The temperature drops, a malevolent presence nears...<br>Prepare for a terrifying confrontation...",
+    "A sense of unease grows as you proceed...<br>An imminent clash with a dark force awaits...",
+    "A dark energy permeates the air...<br>As you approach a formidable challenge...",
+    "The atmosphere stifles, a dreadful presence nears...<br>Steel yourself for an epic encounter...",
+    "Your instincts scream danger...<br>As you move closer to a powerful adversary...",
+    "A sickening dread fills your stomach...<br>A malevolent presence lies ahead...",
+    "The walls close in, the shadows deepen...<br>A fearsome battle looms...",
 ],
 		shopEnter: [
 			"You enter a dimly lit room...<br>Weapons, armor and potions strewn about...<br>A skeleton greets you with an eerie stare...",
 			  "A room of flickering shadows greets you...<br>Weapons and trinkets lie in wait...<br>A bony figure watches you, unblinking...",
   "You stumble into a chamber of dim light...<br>Armaments and relics beckon...<br>An eerie skeletal sentinel observes your every move...",
-  "A murky room lies before you...<br>Amidst the gloom, equipment and potions are strewn...<br>A lifeless, bony guardian greets you with empty eyes..."
+  "A murky room lies before you...<br>Amidst the gloom, equipment and potions are strewn...<br>A lifeless, bony guardian greets you with empty eyes...",
+  "You find yourself in a shadowy alcove...<br>Weapons, relics, and elixirs lay before you...<br>A skeletal merchant greets you, chillingly...",
+    "You step into a dim chamber...<br>Amidst the darkness, arms and artifacts tempt you...<br>A bony figure scrutinizes your every move...",
+    "An eerie room envelops you...<br>Cluttered with gear and potions...<br>A skeletal host watches, unblinking...",
+    "You discover a gloomy sanctuary...<br>Equipment and talismans scattered about...<br>A ghastly bone trader surveys your arrival...",
+    "You wander into a room bathed in shadows...<br>Surrounded by armaments and mystic items...<br>A spine-chilling skeletal figure awaits...",
+    "You stumble upon a cryptic chamber...<br>Weapons, armor, and charms beckon...<br>A hollow-eyed skeletal merchant greets you...",
+    "You enter a room shrouded in darkness...<br>Amidst the gloom, weapons and enchantments call...<br>A bony, spectral figure observes your presence...",
+    "A candlelit room lies before you...<br>Surrounded by weapons, potions, and relics...<br>An eerie, skeletal dealer awaits your patronage...",
+	"You step into a room bathed in faint light...<br>Armor, trinkets, and elixirs surround you...<br>A bony shopkeeper greets you with a hollow grin...",
+    "You venture into a dimly lit chamber...<br>Weapons, charms, and potions await your perusal...<br>An eerie skeletal figure regards you silently...",
+    "A mysterious room reveals itself...<br>Arms and enchanted items fill the shadows...<br>A skeletal merchant welcomes you with a hollow gaze...",
+    "You find a hidden chamber cloaked in darkness...<br>Amidst the gloom, gear and mystic trinkets beckon...<br>A bony figure watches, unsettlingly...",
+    "You uncover a room draped in shadows...<br>Weapons, relics, and potions lie in wait...<br>A ghostly skeletal trader stands sentinel...",
+    "You come across a shadowy enclave...<br>Armaments, talismans, and elixirs call to you...<br>A spine-chilling skeletal keeper greets you...",
+    "You happen upon a room dimly illuminated...<br>Surrounded by weapons, armor, and arcane items...<br>A spectral skeletal figure awaits your approach...",
+    "A room of hushed whispers greets you...<br>Cluttered with arms, enchantments, and potions...<br>An unsettling bony merchant observes your entry...",
+    "You enter a chamber of flickering light...<br>Amidst the darkness, relics and weapons tempt...<br>A chilling skeletal guardian stands watch...",
+    "You discover a hidden room bathed in shadows...<br>Armaments, potions, and artifacts surround you...<br>A ghastly skeletal figure regards your presence...",
+    "You stumble into a room of eerie silence...<br>Weapons, trinkets, and mystic items fill the space...<br>A bony, spectral merchant greets you...",
+    "An arcane chamber unfolds before you...<br>Surrounded by arms, relics, and potions...<br>A macabre skeletal figure silently awaits...",
+    "You make your way into a room cloaked in darkness...<br>Weapons, armor, and enchantments line the walls...<br>A hollow-eyed skeletal vendor watches your arrival...",
+    "A shadowy room reveals itself to you...<br>Amidst the gloom, gear and mystic trinkets call...<br>A bony figure stands guard, unnervingly...",
+    "You happen upon a chamber lit by flickering candles...<br>Weapons, potions, and relics fill the space...<br>An eerie, skeletal merchant welcomes your patronage...",
 		],
 		shopExit: [
 			"The skeleton bids you farewell with a chilling stare...<br>You step out into the darkness once again...",
 			  "The bone-laden merchant gazes upon your departure...<br>The darkness swallows you whole once more...",
   "With a silent nod from the skeletal shopkeeper...<br>You venture back into the unknown...",
-  "As the lifeless vendor's gaze lingers...<br>You leave behind the relative safety of the room..."
+  "As the lifeless vendor's gaze lingers...<br>You leave behind the relative safety of the room...",
+  "As the skeletal merchant's gaze follows...<br>You step back into the cold embrace of the darkness...",
+    "The bony vendor watches your departure...<br>You brace yourself for the shadows that lie ahead...",
+    "With a chilling nod from the skeletal shopkeeper...<br>You venture forth, swallowed by darkness...",
+    "The lifeless guardian bids you farewell...<br>You stride back into the abyss...",
+    "As the bone-clad merchant's hollow gaze lingers...<br>You abandon the sanctuary for the darkness beyond...",
+    "With the skeletal vendor's unblinking stare upon you...<br>You re-enter the foreboding darkness...",
+    "The bony shopkeeper's gaze follows your exit...<br>Darkness once more engulfs you...",
+    "A silent farewell from the skeletal merchant...<br>You step into the cold, unyielding shadows...",
+	"The skeletal merchant watches as you depart...<br>The shadows envelop you once again...",
+    "With a hollow gaze, the bony shopkeeper bids adieu...<br>You leave the sanctuary for the uncertainty ahead...",
+    "The lifeless figure sees you off...<br>You venture forth, embraced by the darkness...",
+    "As the skeletal vendor's stare lingers...<br>You walk away, shrouded in darkness once more...",
+    "The bony figure nods farewell...<br>You step back into the gloom...",
+    "With the skeleton's hollow eyes upon you...<br>You exit, swallowed by the shadows...",
+    "A chilling glance from the bony merchant...<br>You leave the safety of the room for the darkness...",
+    "As the skeletal sentinel silently observes...<br>You plunge back into the murky depths...",
+    "The bone-clad vendor watches as you disappear...<br>Into the inky abyss...",
+    "The skeletal figure's gaze follows you...<br>As you step back into the unknown...",
+    "With the bony shopkeeper's farewell...<br>You return to the shadowy embrace...",
+    "The skeleton's unblinking stare watches you depart...<br>You leave the refuge for the darkness outside...",
+    "An eerie nod from the lifeless vendor...<br>You venture back into the shadows...",
+    "As the skeletal merchant's gaze lingers on your exit...<br>You re-enter the darkened realm...",
+    "With the bone-laden figure's eyes upon you...<br>You step forth, enshrouded in shadows once more...",
 		],
 		playerDeath: [
-			"Your vision fades as death's cold embrace envelops you...<br>Shrouded in darkness, you feel your strength ebbing away...<br>But a faint, flickering light beckons you to rise once more...",
-			  "As the darkness claims your life...<br>Your last breath escapes, cold and alone...<br>Yet a glimmer of hope remains...",
-  "Overwhelmed by the void, you succumb to its grasp...<br>But from the depths, a faint light calls you back...",
-  "Death's icy fingers claim your soul...<br>Lost within the shadows...<br>A distant spark refuses to let you go..."
+			"As the darkness claims your life...<br>Your last breath escapes, cold and alone...<br>Yet a glimmer of hope remains...",
+			"Death's icy fingers claim your soul...<br>Lost within the shadows...<br>A distant spark refuses to let you go...",
+			"Your strength wanes, the darkness claims your life...<br>But a whisper in the void reminds you...<br>What is dead may never die...",
+			"Life slips away, consumed by the inky blackness...<br>Yet a distant voice echoes...<br>What is dead may never die...",
+			"As you falter, the shadows envelop your being...<br>Your spirit lingers, for what is dead may never die...<br>A faint light calls you back...",
+			"The cold void engulfs your soul, your body lifeless...<br>But you hear a faint murmur...<br>What is dead may never die...",
+			"As the shadows consume your life force...<br>Your breath falters, your strength wanes...<br>But a distant glimmer of hope calls you back...",
+			"Falling to the darkness, your spirit wavers...<br>Your last breath escapes, filled with sorrow...<br>Yet a faint light refuses to abandon you...",
+			"The darkness seizes your soul, your body limp...<br>But a soft voice whispers...<br>What is dead may never die...",
+			"The abyss claims you, your life fading...<br>Yet from the darkness, a faint glimmer beckons...",
+    "Shadows envelop your spirit, your body weak...<br>But deep within, an echo murmurs...<br>What is dead may never die...",
+    "As the void devours your essence...<br>Your pulse weakens, your breath stills...<br>But hope persists, a distant flicker...",
+    "Death's embrace tightens, stealing your life...<br>In the darkness, a voice whispers...<br>What is dead may never die...",
+    "The darkness swallows your vitality...<br>As your heartbeat slows, a distant light lingers...",
+    "As your spirit fractures, shadows close in...<br>Yet within the abyss, a spark refuses to fade...",
+    "The cold tendrils of death envelop you...<br>Your life fades, but a quiet voice whispers...<br>What is dead may never die...",
+    "Succumbing to the shadows, your body falters...<br>Yet a feeble light calls to you, unwilling to let go...",
+    "The void's grasp tightens, your life slipping away...<br>But deep in the darkness, a glint of hope remains...",
+    "Darkness consumes your being, your body numb...<br>Yet a whisper in the void reminds you...<br>What is dead may never die...",
+    "Death's shroud descends upon you...<br>Your life wanes, but a distant flicker holds on...",
+    "You are swallowed by the cold embrace of death...<br>But a faint voice echoes...<br>What is dead may never die...",
+    "The darkness engulfs you, your life force ebbing...<br>Yet a dim light fights to pull you back...",
+    "As your spirit is enveloped by shadows...<br>Your breath slows, but a distant beacon remains...",
+    "Fading into the abyss, your life slips away...<br>Yet a quiet voice reassures you...<br>What is dead may never die...",
 		],
 		
 levelUp: [
   "With newfound strength coursing through your veins...<br>You feel invigorated, ready to face greater challenges...",
   "As your power grows, the darkness seems less daunting...<br>Victory seems more certain with each step...",
-  "A surge of energy flows through you...<br>Empowering you to face the horrors that lie ahead..."
+  "A surge of energy flows through you...<br>Empowering you to face the horrors that lie ahead...",
+  "As your power swells, the darkness falters...<br>You stand ready to confront even greater foes...",
+    "With each newfound strength, your determination soars...<br>The crypt's horrors seem less menacing...",
+    "A newfound vigor fills you...<br>Emboldened, you stride deeper into the abyss...",
+    "Your strength surges, fear wanes...<br>You stand prepared for whatever lies ahead...",
+    "Empowered by growth, the darkness seems less suffocating...<br>You face the unknown with unwavering resolve...",
+	"Embracing newfound power, the darkness quivers...<br>With each step, your courage grows...",
+    "As your strength blossoms, your fears wither...<br>The crypt's challenges seem less insurmountable...",
+    "A surge of might courses through your body...<br>Fortified, you face the crypt's terrors...",
+    "With each advancement, the shadows cower...<br>Confidence fills you as you confront the darkness...",
+    "Your power expands, the darkness retreats...<br>You march forward, ready for the trials ahead...",
+    "As your abilities flourish, the crypt's threats fade...<br>With steadfast resolve, you press on...",
+    "Newfound strength surges within you...<br>Undaunted, you navigate the crypt's perils...",
+    "Empowered by progress, fear loses its grip...<br>With newfound courage, you face the abyss...",
+	"As your might swells, the darkness recedes...<br>With renewed vigor, you press onward...",
+    "Your power blossoms, the shadows quail...<br>Armed with newfound strength, you face the challenges ahead...",
+    "A newfound energy invigorates you...<br>Emboldened, you delve deeper into the crypt...",
+    "With each surge of power, your confidence grows...<br>Unwavering, you march towards the unknown...",
+    "Your strength intensifies, the abyss seems less daunting...<br>With renewed courage, you confront the darkness...",
+    "As your abilities thrive, the shadows falter...<br>With newfound resilience, you forge ahead...",
+    "Newfound strength courses through you...<br>Undeterred, you face the crypt's horrors...",
+    "Your power swells, the darkness dims...<br>With unwavering determination, you embrace the challenges...",
+    "Empowered by your growth, the abyss loses its grip...<br>Fearless, you march forward...",
+    "As your might flourishes, the shadows retreat...<br>With steadfast courage, you traverse the crypt...",
+    "Newfound energy pulses within you...<br>With heightened resolve, you delve into the darkness...",
+    "Your power surges, the crypt's terrors abate...<br>With newfound fortitude, you press onward...",
+    "With each new strength, the shadows shrink...<br>Fearless, you journey deeper into the abyss...",
+    "As your abilities expand, the darkness loses its hold...<br>With renewed courage, you face the trials ahead...",
+    "A surge of power emboldens you...<br>With newfound determination, you confront the unknown...",
 ],
 		newFloor: [
 			"As you descend deeper into the crypt, the air grows colder...<br>Shadows dance on the walls, concealing secrets untold...",
 			"The chilling air grows heavier as you venture deeper...<br>Unseen whispers haunt the corridors...",
   "You tread cautiously into the abyss, each step revealing more horrors...<br>The darkness holds its breath, waiting...",
-  "Descending further, the oppressive gloom threatens to consume you...<br>Yet you press on, determined to conquer the unknown..."
+  "Descending further, the oppressive gloom threatens to consume you...<br>Yet you press on, determined to conquer the unknown...",
+   "Deeper still, you delve into the abyss...<br>With each step, the shadows grow more sinister...",
+    "You descend, the air thick with darkness...<br>Untold horrors lurk around every corner...",
+    "As you proceed downward, the crypt's secrets deepen...<br>A shroud of unease envelops you...",
+    "The crypt's depths beckon, cold and unyielding...<br>What awaits in the darkness remains a mystery...",
+    "With each level, the crypt's grip tightens...<br>Yet your resolve remains unshaken...",
+	"As you delve further, the darkness clings tighter...<br>Ever more ominous secrets lie in wait...",
+    "The crypt's labyrinth twists deeper...<br>Shrouded in shadows and secrets...",
+    "Each step into the abyss reveals greater terrors...<br>Darkness whispers, promising despair...",
+    "Descending deeper, the air grows more oppressive...<br>As the crypt's hidden horrors lie in wait...",
+    "The shadows thicken with each new level...<br>Chilling whispers echo through the crypt...",
+	"As you venture further, the darkness tightens its embrace...<br>Shadows dance with sinister intent...",
+    "Deeper into the crypt, the air becomes icy...<br>Whispers of unseen horrors fill the silence...",
+    "You delve into the abyss, the darkness intensifying...<br>The crypt's secrets remain shrouded...",
+    "With each descent, the crypt's chill deepens...<br>The weight of unseen dread looms...",
+    "Descending further, shadows coil around you...<br>Mysterious whispers haunt your every step...",
+    "As you probe the crypt's depths, the air thickens...<br>Hidden terrors lurk in the inky blackness...",
+    "The deeper you venture, the more the shadows stir...<br>Secrets locked away in the darkness beckon...",
+    "With each level, the crypt's embrace grows colder...<br>Whispers of despair echo through the gloom...",
+    "As you delve deeper, the darkness whispers...<br>The crypt's mysteries remain just out of reach...",
+    "The shadows grow denser as you journey further...<br>What lies in the darkness remains veiled...",
+    "Descending into the crypt, the air chills your bones...<br>Hidden secrets linger in the shadows...",
+    "Each step deeper into the abyss unveils new horrors...<br>The crypt's whispers grow ever more haunting...",
+    "As you proceed, the darkness envelops you...<br>The crypt's secrets whisper, drawing you in...",
+    "With each descent, the air grows colder still...<br>As the crypt's mysteries remain locked away...",
+    "Deeper still, the shadows envelop you...<br>As the crypt's untold secrets stir within the darkness...",
 		],
-		error: "An unexpected error occurred. Please try again.",
+		err: "An unexpected error occurred. Please try again.",
 	},
+
 	
     enemies: [
-  { name: 'Goblin', difficulty: 'easy', hp: 25, maxHp: 25, attack: 7, gold: 5, exp: 4 },
-  { name: 'Zombie', difficulty: 'easy', hp: 28, maxHp: 28, attack: 8, gold: 6, exp: 4 },
-  { name: 'Mimic', difficulty: 'easy', hp: 30, maxHp: 30, attack: 9, gold: 8, exp: 5 },
-  { name: 'Gnoll', difficulty: 'easy', hp: 26, maxHp: 26, attack: 7, gold: 6, exp: 4 },
-  { name: 'Giant Rat', difficulty: 'easy', hp: 24, maxHp: 24, attack: 6, gold: 5, exp: 3 },
-  { name: 'Orc', difficulty: 'easy', hp: 29, maxHp: 29, attack: 9, gold: 8, exp: 5 },
-  { name: 'Kobold', difficulty: 'easy', hp: 27, maxHp: 27, attack: 8, gold: 6, exp: 4 },
-  { name: 'Hobgoblin', difficulty: 'easy', hp: 32, maxHp: 32, attack: 10, gold: 9, exp: 5 },
-  { name: 'Spiderling', difficulty: 'easy', hp: 22, maxHp: 22, attack: 6, gold: 4, exp: 3 },
-  { name: 'Wolf', difficulty: 'easy', hp: 25, maxHp: 25, attack: 8, gold: 5, exp: 4 },
-  { name: 'Mud Golem', difficulty: 'easy', hp: 24, maxHp: 24, attack: 6, gold: 6, exp: 3 },
-{ name: 'Will-o-Wisp', difficulty: 'easy', hp: 20, maxHp: 20, attack: 5, gold: 4, exp: 3 },
-{ name: 'Lesser Elemental', difficulty: 'easy', hp: 21, maxHp: 21, attack: 5, gold: 6, exp: 3 },
-{ name: 'Slime', difficulty: 'easy', hp: 20, maxHp: 20, attack: 4, gold: 5, exp: 3 },
-{ name: 'Dark Sprite', difficulty: 'easy', hp: 20, maxHp: 22, attack: 5, gold: 5, exp: 3 },
-{ name: 'Living Armor', difficulty: 'easy', hp: 23, maxHp: 23, attack: 6, gold: 7, exp: 3 },
-{ name: 'Gelatinous Cube', difficulty: 'easy', hp: 27, maxHp: 27, attack: 5, gold: 6, exp: 3 },
-{ name: 'Necromancer Acolyte', difficulty: 'easy', hp: 25, maxHp: 25, attack: 7, gold: 8, exp: 4 },
-{ name: 'Wyvern Hatchling', difficulty: 'easy', hp: 22, maxHp: 19, attack: 6, gold: 5, exp: 3 },
-  { name: 'Imp', difficulty: 'medium', hp: 35, maxHp: 35, attack: 13, gold: 11, exp: 6 },
-  { name: 'Phantom', difficulty: 'medium', hp: 40, maxHp: 40, attack: 14, gold: 13, exp: 8 },
-  { name: 'Harpy', difficulty: 'medium', hp: 36, maxHp: 36, attack: 12, gold: 10, exp: 6 },
-  { name: 'Banshee', difficulty: 'medium', hp: 45, maxHp: 45, attack: 16, gold: 16, exp: 9 },
-  { name: 'Djinn', difficulty: 'medium', hp: 46, maxHp: 46, attack: 15, gold: 12, exp: 7 },
-  { name: 'Basilisk', difficulty: 'medium', hp: 34, maxHp: 34, attack: 10, gold: 13, exp: 6 },
-{ name: 'Wererat', difficulty: 'medium', hp: 33, maxHp: 33, attack: 11, gold: 12, exp: 6 },
-{ name: 'Ice Wraith', difficulty: 'medium', hp: 39, maxHp: 39, attack: 13, gold: 15, exp: 8 },
-{ name: 'Succubus', difficulty: 'medium', hp: 37, maxHp: 37, attack: 12, gold: 14, exp: 7 },
-{ name: 'Troll', difficulty: 'medium', hp: 44, maxHp: 44, attack: 18, gold: 18, exp: 10 },
-  { name: 'Treant', difficulty: 'medium', hp: 38, maxHp: 38, attack: 14, gold: 14, exp: 7 },
-  { name: 'Giant Spider', difficulty: 'medium', hp: 39, maxHp: 39, attack: 14, gold: 13, exp: 7 },
-  { name: 'Centaur', difficulty: 'medium', hp: 41, maxHp: 41, attack: 16, gold: 16, exp: 9 },
-  { name: 'Griffin', difficulty: 'medium', hp: 42, maxHp: 42, attack: 15, gold: 15, exp: 8 },
-  { name: 'Necromancer', difficulty: 'hard', hp: 66, maxHp: 66, attack: 26, gold: 32, exp: 17 },
-  { name: 'Ogre', difficulty: 'hard', hp: 62, maxHp: 62, attack: 22, gold: 24, exp: 12 },
-  { name: 'Wraith', difficulty: 'hard', hp: 52, maxHp: 52, attack: 24, gold: 26, exp: 13 },
-  { name: 'Cyclops', difficulty: 'hard', hp: 68, maxHp: 68, attack: 27, gold: 30, exp: 16 },
-  { name: 'Shadow Fiend', difficulty: 'hard', hp: 58, maxHp: 58, attack: 23, gold: 25, exp: 13 },
-  { name: 'Hellhound', difficulty: 'hard', hp: 64, maxHp: 64, attack: 29, gold: 33, exp: 17 },
-  { name: 'Gargoyle', difficulty: 'hard', hp: 52, maxHp: 52, attack: 22, gold: 22, exp: 11 },
-  { name: 'Lich', difficulty: 'hard', hp: 72, maxHp: 72, attack: 31, gold: 31, exp: 18 },
-  { name: 'Minotaur', difficulty: 'hard', hp: 65, maxHp: 65, attack: 25, gold: 28, exp: 14 },
-  { name: 'Earth Elemental', difficulty: 'hard', hp: 70, maxHp: 70, attack: 27, gold: 31, exp: 16 },
-  { name: 'Air Elemental', difficulty: 'hard', hp: 55, maxHp: 55, attack: 26, gold: 29, exp: 15 },
-  { name: 'Fire Elemental', difficulty: 'hard', hp: 60, maxHp: 60, attack: 28, gold: 32, exp: 16 },
-  { name: 'Water Elemental', difficulty: 'hard', hp: 58, maxHp: 58, attack: 23, gold: 26, exp: 14 },
-  { name: 'Vampire', difficulty: 'hard', hp: 63, maxHp: 63, attack: 30, gold: 33, exp: 18 },
-  { name: 'Giant', difficulty: 'hard', hp: 69, maxHp: 69, attack: 29, gold: 35, exp: 19 },
-  { name: 'Manticore', difficulty: 'hard', hp: 61, maxHp: 61, attack: 26, gold: 30, exp: 15 },
-  { name: 'Chimera', difficulty: 'hard', hp: 66, maxHp: 66, attack: 28, gold: 36, exp: 19 },
+  { name: 'Goblin', difficulty: 'easy', maxHp: 25, attack: 7, gold: 5, exp: 4 },
+  { name: 'Zombie', difficulty: 'easy', maxHp: 28, attack: 8, gold: 6, exp: 4 },
+  { name: 'Mimic', difficulty: 'easy', maxHp: 30, attack: 9, gold: 8, exp: 5 },
+  { name: 'Gnoll', difficulty: 'easy', maxHp: 26, attack: 7, gold: 6, exp: 4 },
+  { name: 'Giant Rat', difficulty: 'easy', maxHp: 24, attack: 6, gold: 5, exp: 3 },
+  { name: 'Orc', difficulty: 'easy', maxHp: 29, attack: 9, gold: 8, exp: 5 },
+  { name: 'Kobold', difficulty: 'easy', maxHp: 27, attack: 8, gold: 6, exp: 4 },
+  { name: 'Hobgoblin', difficulty: 'easy', maxHp: 32, attack: 10, gold: 9, exp: 5 },
+  { name: 'Spiderling', difficulty: 'easy', maxHp: 22, attack: 6, gold: 4, exp: 3 },
+  { name: 'Wolf', difficulty: 'easy', maxHp: 25, attack: 8, gold: 5, exp: 4 },
+  { name: 'Mud Golem', difficulty: 'easy', maxHp: 24, attack: 6, gold: 6, exp: 3 },
+  { name: 'Will-o-Wisp', difficulty: 'easy', maxHp: 20, attack: 5, gold: 4, exp: 3 },
+  { name: 'Lesser Elemental', difficulty: 'easy', maxHp: 21, attack: 5, gold: 6, exp: 3 },
+  { name: 'Slime', difficulty: 'easy', maxHp: 20, attack: 4, gold: 5, exp: 3 },
+  { name: 'Dark Sprite', difficulty: 'easy', maxHp: 22, attack: 5, gold: 5, exp: 3 },
+  { name: 'Living Armor', difficulty: 'easy', maxHp: 23, attack: 6, gold: 7, exp: 3 },
+  { name: 'Gelatinous Cube', difficulty: 'easy', maxHp: 27, attack: 5, gold: 6, exp: 3 },
+  { name: 'Necromancer Acolyte', difficulty: 'easy', maxHp: 25, attack: 7, gold: 8, exp: 4 },
+  { name: 'Wyvern Hatchling', difficulty: 'easy', maxHp: 19, attack: 6, gold: 5, exp: 3 },
+  { name: 'Imp', difficulty: 'medium', maxHp: 35, attack: 13, gold: 11, exp: 6 },
+  { name: 'Wendigo', difficulty: 'medium', maxHp: 47, attack: 17, gold: 18, exp: 9 },
+{ name: 'Kelpie', difficulty: 'medium', maxHp: 36, attack: 11, gold: 10, exp: 6 },
+  { name: 'Dryad', difficulty: 'medium', maxHp: 37, attack: 12, gold: 11, exp: 6 },
+{ name: 'Phantom', difficulty: 'medium', maxHp: 40, attack: 14, gold: 13, exp: 8 },
+{ name: 'Harpy', difficulty: 'medium', maxHp: 36, attack: 12, gold: 10, exp: 6 },
+{ name: 'Banshee', difficulty: 'medium', maxHp: 45, attack: 16, gold: 16, exp: 9 },
+{ name: 'Djinn', difficulty: 'medium', maxHp: 46, attack: 15, gold: 12, exp: 7 },
+{ name: 'Basilisk', difficulty: 'medium', maxHp: 34, attack: 10, gold: 13, exp: 6 },
+{ name: 'Wererat', difficulty: 'medium', maxHp: 33, attack: 11, gold: 12, exp: 6 },
+{ name: 'Ice Wraith', difficulty: 'medium', maxHp: 39, attack: 13, gold: 15, exp: 8 },
+{ name: 'Succubus', difficulty: 'medium', maxHp: 37, attack: 12, gold: 14, exp: 7 },
+{ name: 'Troll', difficulty: 'medium', maxHp: 44, attack: 18, gold: 18, exp: 10 },
+{ name: 'Treant', difficulty: 'medium', maxHp: 38, attack: 14, gold: 14, exp: 7 },
+{ name: 'Giant Spider', difficulty: 'medium', maxHp: 39, attack: 14, gold: 13, exp: 7 },
+{ name: 'Centaur', difficulty: 'medium', maxHp: 41, attack: 16, gold: 16, exp: 9 },
+{ name: 'Griffin', difficulty: 'medium', maxHp: 42, attack: 15, gold: 15, exp: 8 },
+  { name: 'Necromancer', difficulty: 'hard', maxHp: 66, attack: 26, gold: 32, exp: 17 },
+{ name: 'Ogre', difficulty: 'hard', maxHp: 62, attack: 22, gold: 24, exp: 12 },
+{ name: 'Wraith', difficulty: 'hard', maxHp: 52, attack: 24, gold: 26, exp: 13 },
+{ name: 'Cyclops', difficulty: 'hard', maxHp: 68, attack: 27, gold: 30, exp: 16 },
+{ name: 'Shadow Fiend', difficulty: 'hard', maxHp: 58, attack: 23, gold: 25, exp: 13 },
+{ name: 'Hellhound', difficulty: 'hard', maxHp: 64, attack: 29, gold: 33, exp: 17 },
+{ name: 'Gargoyle', difficulty: 'hard', maxHp: 52, attack: 22, gold: 22, exp: 11 },
+{ name: 'Lich', difficulty: 'hard', maxHp: 72, attack: 31, gold: 31, exp: 18 },
+{ name: 'Minotaur', difficulty: 'hard', maxHp: 65, attack: 25, gold: 28, exp: 14 },
+{ name: 'Earth Elemental', difficulty: 'hard', maxHp: 70, attack: 27, gold: 31, exp: 16 },
+{ name: 'Air Elemental', difficulty: 'hard', maxHp: 55, attack: 26, gold: 29, exp: 15 },
+{ name: 'Fire Elemental', difficulty: 'hard', maxHp: 60, attack: 28, gold: 32, exp: 16 },
+{ name: 'Water Elemental', difficulty: 'hard', maxHp: 58, attack: 23, gold: 26, exp: 14 },
+{ name: 'Vampire', difficulty: 'hard', maxHp: 63, attack: 30, gold: 33, exp: 18 },
+{ name: 'Giant', difficulty: 'hard', maxHp: 69, attack: 29, gold: 35, exp: 19 },
+{ name: 'Manticore', difficulty: 'hard', maxHp: 61, attack: 26, gold: 30, exp: 15 },
+{ name: 'Chimera', difficulty: 'hard', maxHp: 66, attack: 28, gold: 36, exp: 19 },
 ],
 
     encounters: [
     { type: 'enemy', chance: 70 },
     { type: 'nothing', chance: 20 },
     { type: 'healing', chance: 10 },
+	{ type: 'boss', chance: 12 },
     ],
 	
-player: {
-  exp: 0, hp: 100, gold: 0, weaponTier: 0, armorTier: 0, potions: 0, floor: 1,
-  floorBoss: null, foundBoss: false, bossDead: false, enemiesOnFloor: [],
-},
-
-settings: {
-	trackVolume: 0.2, effectVolume: 0.2,
-
-},
 	
-	constants: {
-  baseMaxHp: 100, baseAttack: 10, baseMaxExp: 20, basePotions: 10,
-  maxHpIncrease: 30, attackIncrease: 7, maxExpMultiplier: 1.5,
-  weaponAttackBonus: 8, armorHpBonus: 35, healingPotionAmount: 50,
-  scalingFactorIncrease: 0.15,
-  bossHpMultiplier: 2, bossAttackMultiplier: 2, bossGoldMultiplier: 3, bossExpMultiplier: 3,
-  healingShrineMin: 20, healingShrineMax: 50,
-  bossFindChance: 12,
-  minDamageMultiplier: 0.6, maxDamageMultiplier: 1.4,
-  weaponCostBase: 70, armorCostBase: 70, potionCost: 15,
-},
-  
-  calculations: {
-    weaponCost: function (weaponTier) {
-      return weaponTier * game.constants.weaponCostBase + game.constants.weaponCostBase;
-    },
-    armorCost: function (armorTier) {
-      return armorTier * game.constants.armorCostBase + game.constants.armorCostBase;
-    },
-    playerStats: function (exp) {
-      let level = 1;
-      let totalExp = game.constants.baseMaxExp;
-      let expRequiredForNextLevel = totalExp;
 
-      while (exp >= expRequiredForNextLevel) {
-        level++;
-        totalExp += expRequiredForNextLevel;
-        expRequiredForNextLevel = Math.floor(game.constants.baseMaxExp * Math.pow(game.constants.maxExpMultiplier, level - 1));
-      }
-
-      const weaponAttack = game.player.weaponTier * game.constants.weaponAttackBonus;
-      const armorHp = game.player.armorTier * game.constants.armorHpBonus;
-
-      return {
-        level: level,
-        maxHp: game.constants.baseMaxHp + (level - 1) * game.constants.maxHpIncrease + armorHp,
-        attack: game.constants.baseAttack + (level - 1) * game.constants.attackIncrease + weaponAttack,
-        maxExp: expRequiredForNextLevel,
-      };
-    },
-    damage: function (attack) {
-      const minDamage = Math.floor(attack * game.constants.minDamageMultiplier);
-      const maxDamage = Math.floor(attack * game.constants.maxDamageMultiplier);
-      return Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-    },
-  },
-	
-  };
+};
 })();
-
-function handleMessage(text, append = false, error = null, clear = false) {
-  if (error) {
-    console.error(error);
-    text = game.text.error;
-  }
-  const playerStats = game.calculations.playerStats(game.player.exp);
-  game.status.innerHTML = `HP: ${game.player.hp}/${playerStats.maxHp}<br>Level: ${playerStats.level}<br>Exp: ${game.player.exp}/${playerStats.maxExp}<br>Floor: ${game.player.floor}<br>Attack: ${playerStats.attack}<br>Gold: ${game.player.gold}<br>Potions: ${game.player.potions}<br>Weapon Tier: ${game.player.weaponTier}<br>Armor Tier: ${game.player.armorTier}`;
-  if (!text) return;
-  try {
-    if (clear) {
-      game.message.innerHTML = '';
-    }
-    if (append) {
-      game.message.innerHTML += text + "<br>";
-    } else {
-      game.message.innerHTML = text + "<br>";
-    }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function playerDeath() {
-  try {
-    const goldLoss = Math.floor(game.player.gold / 2);
-    game.player.gold -= goldLoss;
-
-    const playerStatsBeforeDeath = game.calculations.playerStats(game.player.exp);
-
-    if (playerStatsBeforeDeath.level === 1) {
-      game.player.exp = 0;
-    } else {
-      const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
-
-      let previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
-      while (previousLevelStats.level >= newLevel) {
-        game.player.exp--;
-        previousLevelStats = game.calculations.playerStats(game.player.exp - 1);
-      }
-    }
-
-    game.player.floor = Math.max(game.player.floor - 1, 1);
-    game.player.hp = game.calculations.playerStats(game.player.exp).maxHp;
-    generateEnemiesOnFloor();
-    generateFloorBoss();
-    updateEnemyStats(null);
-    game.player.foundBoss = false;
-    fightBossBtn.textContent = "Fight Boss";
-    fightBossBtn.onclick = fightFloorBoss;
-    fightBossBtn.disabled = true;
-
-    handleMessage(getRandomDialogue("playerDeath"), true);
-    handleMessage(`You return to level ${game.calculations.playerStats(game.player.exp).level}, floor ${game.player.floor} and have ${game.player.gold} gold left.`, true);
-
-    setButtons(true);
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function levelUp() {
-  try {
-    const playerStats = game.calculations.playerStats(game.player.exp);
 	
-	game.player.hp = playerStats.maxHp;
-    
-      handleMessage(getRandomDialogue("levelUp"), true);
-      handleMessage(`Congratulations! You reached level ${playerStats.level}!<br>Your max HP and attack have increased!`, true);
-
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function getRandomEncounter() {
-  try {
-  const totalChance = game.encounters.reduce((acc, cur) => acc + cur.chance, 0);
-  let randomChance = Math.floor(Math.random() * totalChance);
-  for (const encounter of game.encounters) {
-    if (randomChance < encounter.chance) {
-      return encounter.type;
+let scale = {
+  baseMaxHp: 100, baseAttack: 10, baseMaxExp: 20, basePot: 10,
+  maxHpInc: 30, atkInc: 7, maxExpMulti: 1.4,
+  wBonus: 8, aBonus: 33, potHeal: 50,
+  scaling: 0.13, bossScaling: 1.7,
+  healMin: 20, healMax: 50,
+  minDmgMulti: 0.6, maxDmgMulti: 1.4,
+  wCostBase: 70, aCostBase: 70, potCost: 15,
+};
+	
+	
+let plr = {
+  exp: 0, hp: scale.baseMaxHp, gold: 0, wTier: 0, aTier: 0, pot: scale.basePot, flr: 1,
+  flrB: null, fndB: false, deadB: false, enmy: [], };
+	
+const tryCatch = (func) => {
+	return function(...args) {
+    try {
+		return func.apply(this, args);
+	} catch (error) {
+		console.error(error);
+		msg(game.text.err);
     }
-    randomChance -= encounter.chance;
-  }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-  
-function getRandomEnemy(difficulty) {
-  try {
-  if (difficulty) {
-    const filteredEnemies = game.enemies.filter(enemy => enemy.difficulty === difficulty);
-    const randomIndex = Math.floor(Math.random() * filteredEnemies.length);
-    return JSON.parse(JSON.stringify(filteredEnemies[randomIndex]));
-  } else {
-    const randomIndex = Math.floor(Math.random() * game.enemies.length);
-    return JSON.parse(JSON.stringify(game.enemies[randomIndex]));
-  }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
+  };
+},
 
-function fight(enemyTemplate) {
-setButtonVisibility(false);
-  const enemy = createEnemy(enemyTemplate);
-  updateEnemyStats(enemy);
-  const damageToPlayer = game.calculations.damage(enemy.attack);
-  
-  const fightBtn = document.createElement('button');
-fightBtn.textContent = 'Fight';
-const runBtn = document.createElement('button');
-runBtn.textContent = 'Run';
+clone = (obj) => {
+		return JSON.parse(JSON.stringify(obj));
+},
 
-  fightBtn.onclick = () => {
-  try {
-    handleMessage(null, false, null, true);
+pStats = (exp) => {
+    let level = 1, totalExp = scale.baseMaxExp, expRequiredForNextLevel = totalExp;
 
-	const playerStats = game.calculations.playerStats(game.player.exp);
-    const damageToEnemy = game.calculations.damage(playerStats.attack);
-    
+    while (exp >= expRequiredForNextLevel) {
+		level++;
+        totalExp += expRequiredForNextLevel;
+        expRequiredForNextLevel = Math.floor(scale.baseMaxExp * Math.pow(scale.maxExpMulti, level - 1));
+	}
+	const weaponAttack = plr.wTier * scale.wBonus;
+	const armorHp = plr.aTier * scale.aBonus;
+    return {
+        level: level,
+        maxHp: scale.baseMaxHp + (level - 1) * scale.maxHpInc + armorHp,
+        attack: scale.baseAttack + (level - 1) * scale.atkInc + weaponAttack,
+        maxExp: expRequiredForNextLevel,
+	};
+},
+	
+dmg = (attack) => {
+	const minDamage = attack * scale.minDmgMulti | 0;
+	const maxDamage = attack * scale.maxDmgMulti | 0;
+	return (Math.random() * (maxDamage - minDamage + 1) + minDamage) | 0;
+},
 
-    enemy.hp -= damageToEnemy;
-    game.player.hp -= damageToPlayer;
+updateHp = (amount) => {
+  plr.hp = Math.min(plr.hp + amount, pStats(plr.exp).maxHp);
+},
 
-    updateEnemyStats(enemy);
+msg = (text, append = false) => {
+	loadStats();
+	if (!text) return;
+	message.innerHTML = append ? message.innerHTML + text + '<br>' : text + '<br>';
+},
 
-    if (game.player.hp <= 0) {
-      handleMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}, but the ${enemy.name} defeated you.`);
-	  setButtonVisibility(true);
-      setButtons(true, fightBtn, runBtn);
-      updateEnemyStats(null);
-      playerDeath();
-    } else if (enemy.hp <= 0) {
-      game.player.gold += enemy.gold;
-      game.player.exp += enemy.exp;
-      handleMessage(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
-		if (game.player.exp >= playerStats.maxExp) {
-			levelUp();
-			playMelody(game.soundEffects.levelUp, game.settings.effectVolume);
+loadStats = () => {
+	const currentPlayerStats = pStats(plr.exp);
+	status.innerHTML = `HP: ${plr.hp}/${currentPlayerStats.maxHp}<br>Level: ${currentPlayerStats.level}<br>Exp: ${plr.exp}/${currentPlayerStats.maxExp}<br>Floor: ${plr.flr}<br>Attack: ${currentPlayerStats.attack}<br>Gold: ${plr.gold}<br>Potions: ${plr.pot}<br>Weapon Tier: ${plr.wTier}<br>Armor Tier: ${plr.aTier}`;
+	updBossBtn();
+},
+
+death = () => {
+	const goldLoss = plr.gold / 2 | 0;
+	plr.gold -= goldLoss;
+	const playerStatsBeforeDeath = pStats(plr.exp);
+	if (playerStatsBeforeDeath.level === 1) {
+		plr.exp = 0;
+	} else {
+		const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
+		let previousLevelStats = pStats(plr.exp - 1);
+		while (previousLevelStats.level >= newLevel) {
+			plr.exp--;
+			previousLevelStats = pStats(plr.exp - 1);
+		}
+    }
+    plr.flr = Math.max(plr.flr - 1, 1);
+    plr.hp = pStats(plr.exp).maxHp;
+	
+    genEnemies();
+	plr.fndB = false;
+	plr.deadB = false;
+	saveGame();
+	
+    msg(randDlg('playerDeath'), true);
+    msg(`You return to level ${pStats(plr.exp).level}, floor ${plr.flr} and have ${plr.gold} gold left.`, true);
+	playEffect(game.soundEffects.playerDeath);
+},
+
+lvl = () => {
+	const currentPlayerStats = pStats(plr.exp);
+	plr.hp = currentPlayerStats.maxHp;
+	msg(randDlg('levelUp'), true);
+	msg(`Congratulations! You reached level ${currentPlayerStats.level}!<br>Your max HP and attack have increased!`, true);
+	playEffect(game.soundEffects.levelUp);
+},
+
+fight = (enemyTemplate) => {
+	setBtns(false, false);
+	combatBtns.style.display = 'block';
+	
+	const enemy = clone(enemyTemplate);
+	updateEnemyStats(enemy);
+	const damageToPlayer = dmg(enemy.attack);
+	
+	const fightBtn = el('fightBtn');
+	const runBtn = el('runBtn');
+	
+	fightBtn.onclick = () => {
+		const currentPlayerStats = pStats(plr.exp);
+		const damageToEnemy = dmg(currentPlayerStats.attack);
+		
+		enemy.hp -= damageToEnemy;
+		plr.hp -= damageToPlayer;
+		updateEnemyStats(enemy);
+		if (plr.hp <= 0) {
+			msg(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} defeated you.`);
+			death();
+			resetUI();
+		} else if (enemy.hp <= 0) {
+			plr.gold += enemy.gold;
+			plr.exp += enemy.exp;
+			msg(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
+			
+			(plr.exp >= currentPlayerStats.maxExp) ? lvl() : playEffect(game.soundEffects.victory);
+			
+			if (enemy.isFloorBoss) {
+				plr.deadB = true;
+				msg(randDlg(`defeatBoss`), true);
+			}
+		resetUI();
 		} else {
-			playMelody(game.soundEffects.victory, game.settings.effectVolume);
+			msg(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} dealt ${damageToPlayer} damage to you.`);
 		}
-		if (enemy.isFloorBoss) {
-			fightBossBtn.textContent = "Next Floor";
-			fightBossBtn.onclick = nextFloor;
-			handleMessage(getRandomDialogue("defeatBoss"), true);
-			game.player.bossDead = true;
+	}
+  
+	runBtn.onclick = () => {
+		plr.hp -= damageToPlayer;
+		if (plr.hp <= 0) {
+			msg(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away and were defeated.`);
+			death();
+		} else {
+			msg(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away.`);
 		}
-	setButtonVisibility(true);
-    setButtons(true, fightBtn, runBtn);
+		resetUI();
+	};	
+},
 
-      updateEnemyStats(null);
-    } else {
-      handleMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} dealt ${damageToPlayer} damage to you.`);
-        game.combatBtns.appendChild(fightBtn);
-        game.combatBtns.appendChild(runBtn);
-        game.combatBtns.style.display = 'block';
-    }
-  } catch (error) {
-    handleMessage(null, false, error);
+
+encounter = {
+	enemy: () => {
+		msg(randDlg(`enemyEncounter`));
+			msg(`What will you do?`, true);
+			const randomIndex = Math.random() * plr.enmy.length | 0;
+			const enemyName = plr.enmy[randomIndex];
+			const scaledEnemy = scaleEnemy(enemyName);
+			fight(scaledEnemy);
+	},
+	nothing: () => {
+		msg(randDlg(`nothingFound`));
+	},
+	healing: () => {
+		const healingAmount = (Math.random() * (scale.healMax - scale.healMin) | 0) + scale.healMin;
+		updateHp(healingAmount);
+		msg(randDlg(`healingShrine`));
+		msg(`You recovered ${healingAmount} HP!`, true);
+	},
+	boss: () => {
+		plr.fndB = true;
+		msg(randDlg(`bossFound`));
+		msg(`You found the floor boss!`, true);
+		const floorBossCopy = scaleEnemy(plr.flrB, true);
+		updateEnemyStats(floorBossCopy);
+	}
+},
+
+explore = tryCatch(function() {
+	updateEnemyStats(null);
+	const encounterType = randEncounter();
+	encounter[encounterType]();
+}),
+
+fightFloorBoss = tryCatch(function() {
+	if (plr.flrB) {
+		const floorBossCopy = scaleEnemy(plr.flrB, true);
+		msg(randDlg(`approachBoss`));
+		fight(floorBossCopy);
+	} else {
+		msg(`You haven't found the floor boss yet.`);
+	}
+}),
+
+randEncounter = () => {
+	const validEncounters = game.encounters.filter(
+	(encounter) => encounter.type !== `boss` || !plr.fndB );
+	const totalChance = validEncounters.reduce(
+	(acc, cur) => acc + cur.chance, 0 );
+	let randomChance = Math.random() * totalChance | 0;
+	for (const encounter of validEncounters) {
+		if (randomChance < encounter.chance) {
+			return encounter.type;
+		}
+	randomChance -= encounter.chance;
+	}
+},
+  
+randEnemy = (difficulty) => {
+	const filteredEnemies = game.enemies.filter(enemy => !difficulty || enemy.difficulty === difficulty);
+	const randomIndex = Math.random() * filteredEnemies.length | 0;
+	const enemy = clone(filteredEnemies[randomIndex]);
+	enemy.hp = enemy.maxHp;
+	return enemy;
+},
+
+updateEnemyStats = (enemy) => {
+	enemy ? (enemyStats.innerHTML = `${enemy.name}<br>HP: ${enemy.hp}<br>Attack: ${enemy.attack}<br>`, enemyStats.style.display = 'block') : (enemyStats.innerHTML = '', enemyStats.style.display = 'none');
+},
+
+genEnemies = tryCatch(function() {
+	let selectedEnemies = new Set(), availableEnemies;
+	plr.flr === 1 ? 
+	Array(3).fill(null).forEach(() => selectedEnemies.add(randEnemy('easy').name)) :
+	['easy', 'medium', 'hard'].forEach(difficulty => selectedEnemies.add(randEnemy(difficulty).name));
+	plr.enmy = [...selectedEnemies];
+	const floorBoss = game.enemies
+	.filter(enemy => plr.enmy.includes(enemy.name))
+	.map((_, index, availableEnemies) => availableEnemies[Math.random() * availableEnemies.length | 0])[0];
+	plr.flrB = floorBoss.name;
+}),
+
+scaleEnemy = (enemyName, isFloorBoss = false) => {
+	const enemyTemplate = game.enemies.find((enemy) => enemy.name === enemyName);
+	const scalingFactor = 1 + (plr.flr - 1) * scale.scaling;
+	const scaledEnemy = clone(enemyTemplate);
+	scaledEnemy.maxHp = scaledEnemy.maxHp * scalingFactor | 0;
+	scaledEnemy.attack = scaledEnemy.attack * scalingFactor | 0;
+	scaledEnemy.gold = scaledEnemy.gold * scalingFactor | 0;
+	scaledEnemy.exp = scaledEnemy.exp * scalingFactor | 0;
+	scaledEnemy.hp = scaledEnemy.maxHp;
+	if (isFloorBoss) {
+		const bossScaling = scale.bossScaling;
+		scaledEnemy.isFloorBoss = true;
+		scaledEnemy.name += ` (Floor Boss)`;
+		scaledEnemy.maxHp = scaledEnemy.maxHp * bossScaling | 0;
+		scaledEnemy.attack = scaledEnemy.attack * bossScaling | 0;
+		scaledEnemy.gold = scaledEnemy.gold * bossScaling | 0;
+		scaledEnemy.exp = scaledEnemy.exp * bossScaling | 0;
+		scaledEnemy.hp = scaledEnemy.maxHp;
+	}
+	return scaledEnemy;
+},
+
+nextFloor = tryCatch(function() {
+	plr.flr++;
+	plr.flrB = null;
+	plr.fndB = false;
+	plr.deadB = false;
+	msg(randDlg('newFloor'));
+	msg(`You've reached floor ${plr.flr}!`, true);
+	playEffect(game.soundEffects.nextFloor);
+	genEnemies();
+	updateEnemyStats(null);
+});
+
+randDlg = (scenario) => {
+    return game.text[scenario][Math.floor(Math.random() * game.text[scenario].length)];
+},
+
+setBtns = (enable, visible, fightBtns) => {
+	const display = visible ? 'inline' : 'none';
+	[exploreBtn, usePotBtn, maxPotionsBtn, shopBtn, fightBossBtn, settingsBtn, saveBtn, loadBtn, exportBtn, importBtn].forEach(btn => {
+		btn.style.display = display;
+		btn.disabled = !enable;
+	});
+	updBossBtn();
+},
+
+updBossBtn = () => {
+  (plr.deadB) ? (fightBossBtn.textContent = 'Next Floor', fightBossBtn.onclick = nextFloor, fightBossBtn.disabled = !plr.deadB) : (fightBossBtn.textContent = 'Fight Boss', fightBossBtn.onclick = fightFloorBoss, fightBossBtn.disabled = !plr.fndB);
+},
+
+resetUI = () => {
+  setBtns(true, true);
+  updateEnemyStats(null);
+  combatBtns.style.display = 'none';
+},
+
+usePot = tryCatch(function(max = false) {
+	const currentPlayerStats = pStats(plr.exp);
+	let potionsUsed = 0;
+	let healthRestored = 0;
+	
+	if (max) {
+		while (plr.pot > 0 && plr.hp < currentPlayerStats.maxHp) {
+			const healingAmount = max ? Math.min(scale.potHeal, currentPlayerStats.maxHp - plr.hp) : scale.potHeal;
+			updateHp(healingAmount);
+			healthRestored += healingAmount;
+			plr.pot--;
+			potionsUsed++;
+		}
+	} else {
+		if (plr.pot > 0 && plr.hp < currentPlayerStats.maxHp) {
+			const healingAmount = scale.potHeal;
+			updateHp(healingAmount);
+			plr.pot--;
+			potionsUsed = 1;
+			healthRestored = healingAmount;
+		}
+	}
+	if (potionsUsed > 0) {
+		msg(`You used ${potionsUsed} potion(s) and recovered ${healthRestored} HP!`);
+	} else if (plr.hp >= currentPlayerStats.maxHp) {
+		msg('Your HP is already full.');
+	} else {
+		msg(`You don't have any potions left.`);
+	}
+  updateEnemyStats(null);
+}),
+
+itemCost = (itemType, itemTier) => {
+	const costBase = itemType === 'weapon' ? scale.wCostBase : scale.aCostBase;
+	return itemTier * costBase + costBase;
+},
+
+updCost = () => {
+	const currentWeaponCost = itemCost('weapon', plr.wTier);
+	const currentArmorCost = itemCost('armor', plr.aTier);
+	const potionCost = scale.potCost;
+	const maxPotions = Math.floor(plr.gold / potionCost);
+	const maxPotionCost = maxPotions * potionCost;
+	
+	el('weaponCost').textContent = `${currentWeaponCost} gold`;
+	el('armorCost').textContent = `${currentArmorCost} gold`;
+	el('potionCost').textContent = `${potionCost} gold`;
+	el('maxPotionCost').textContent = `${maxPotionCost} gold`;
+},
+
+tglShop = () => {
+	const isShopOpen = shop.style.display === 'block';
+	if (isShopOpen) {
+		msg(randDlg('shopExit'));
+		setBtns(true, true);
+	} else {
+		msg(randDlg('shopEnter'));
+		setBtns(false, false);
+		updCost();
+	}
+	shop.style.display = isShopOpen ? 'none' : 'block';
+	updateEnemyStats(null);
+},
+
+buyItem = tryCatch(function(itemType) {
+	const itemTier = itemType === 'weapon' ? plr.wTier : plr.aTier;
+	const cost = itemCost(itemType, itemTier);
+	
+	if (plr.gold < cost) return msg(`You don't have enough gold to upgrade your ${itemType}.`);
+	plr.gold -= cost;
+	if (itemType === 'weapon') {
+		plr.wTier++;
+		msg(`You upgraded your weapon to Tier ${plr.wTier}.`);
+	} else {
+		plr.aTier++;
+		plr.hp += scale.aBonus;
+		msg(`You upgraded your armor to Tier ${plr.aTier}.`);
+	}
+	updCost();
+}),
+
+buyPots = tryCatch(function(max = false) {
+	const potionCost = scale.potCost;
+	const maxPotions = Math.floor(plr.gold / potionCost);
+	const totalCost = max ? maxPotions * potionCost : potionCost;
+	const boughtPotions = max ? maxPotions : 1;
+	
+	if (plr.gold >= totalCost && boughtPotions > 0) {
+		plr.gold -= totalCost;
+		plr.pot += boughtPotions;
+		msg(`You bought ${boughtPotions} potion(s) for ${totalCost} gold.<br>You now have ${plr.pot} potions.`);
+		updCost();
+	} else {
+		msg(`You don't have enough gold to buy any potions.`);
+	}
+}),
+
+
+
+
+
+
+
+
+sLS = (k, d) => {localStorage.setItem(k, btoa(JSON.stringify(d)));}, // saveToLocalStorage
+lLS = (k) => {const d = localStorage.getItem(k); return d ? JSON.parse(atob(d)) : null;}, // loadFromLocalStorage
+
+saveGame = tryCatch((auto = true) => {
+  sLS('SerRat&ChatGPTsEndlessTextBasedRPG.save', valPlrData(plr));
+  auto ? console.log('autosave successful') : msg('Game saved successfully!<br>Please note that clearing browser cache will wipe save data!');
+}),
+
+loadGame = tryCatch(() => {
+  const lp = lLS('SerRat&ChatGPTsEndlessTextBasedRPG.save'); // loadedPlayer
+  if (lp) {plr = valPlrData(lp); msg('Game loaded successfully!'); msg(randDlg('loadGame'), true); updateEnemyStats(null);  } else {msg('No saved game data found.');}
+}),
+
+exportSave = tryCatch(() => {
+  const sd = lLS('SerRat&ChatGPTsEndlessTextBasedRPG.save'); // saveData
+  if (sd) {const a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,' + btoa(JSON.stringify(sd)); a.download = 'descentIntoDarkness.save'; a.style.display = 'none'; document.body.appendChild(a); a.click(); document.body.removeChild(a); msg('Save file exported successfully!');} else {msg('No saved game data found.');}
+}),
+
+importSave = tryCatch(e => {
+  const f = e.target.files[0]; // file
+  if (f) {
+    const r = new FileReader(); // reader
+    r.onload = e => {
+      try {const lp = JSON.parse(atob(e.target.result)); sLS('SerRat&ChatGPTsEndlessTextBasedRPG.save', valPlrData(lp)); loadGame(); msg('Save file imported successfully!');} catch (err) {handleError(err);}
+    };
+    r.readAsText(f);
   }
+}),
+
+triggerFileInput = () => {fileInput.click();},
+
+resetSaveData = () => {
+  if (confirm('Are you sure you want to reset your save data? This action cannot be undone.')) {
+	tglSet(); localStorage.removeItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
+	msg('Save data reset successfully.');
+	startGame();
+  }
+},
+ 
+valPlrData = (playerData) => {
+  const defaultPlayer = plr;
+  const oldToNewKeys = {
+    weaponTier: 'wTier',
+    armorTier: 'aTier',
+    potions: 'pot',
+    floor: 'flr',
+    floorBoss: 'flrB',
+    foundBoss: 'fndB',
+    bossDead: 'deadB',
+    enemiesOnFloor: 'enmy',
+    selectedTrack: 'trk'
+  };
+
+  const filteredPlayerData = {};
+
+  for (const key in defaultPlayer) {
+    const oldKey = Object.keys(oldToNewKeys).find(oldKey => oldToNewKeys[oldKey] === key);
+    const useOldKey = oldKey && playerData.hasOwnProperty(oldKey) && playerData[oldKey] !== null;
+
+    if ((playerData.hasOwnProperty(key) && playerData[key] != null) || useOldKey) {
+  filteredPlayerData[key] = useOldKey ? playerData[oldKey] : playerData[key];
+  if (useOldKey) console.warn(`Recovering save data: using old key ${oldKey}, updating to new key ${key}.`);
+  } else {
+      console.warn(`Recovering save data: missing or corrupt key ${key}, using default value.`);
+      filteredPlayerData[key] = defaultPlayer[key];
+    }
+  }
+  const validEnemyNames = game.enemies.map(enemy => enemy.name);
+  if (filteredPlayerData.enmy) {
+  const invalidEnemies = filteredPlayerData.enmy.filter(enemy => !validEnemyNames.includes(enemy));
+  if (invalidEnemies.length) {
+    console.error(`Recovering save data: invalid enemy type(s) found: ${invalidEnemies.join(', ')}. Rerolling enemies on floor and boss.`);
+    genEnemies();
+  }
+} else {
+  console.error('Recovering save data: enemiesOnFloor is missing or invalid. Rerolling enemies on floor and boss.');
+  genEnemies();
+}
+
+  return filteredPlayerData;
 };
 
-  runBtn.onclick = () => {
-    game.player.hp -= damageToPlayer;
-if (game.player.hp <= 0) {
-  handleMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away and were defeated.`);
-  enemyStats.style.display = 'none';
-  playerDeath();
-} else {
-  handleMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away.`);
-}
-setButtonVisibility(true);
-setButtons(true, fightBtn, runBtn);
-
-updateEnemyStats(null);
-  };
-
-
-  setButtons(false);
-  handleMessage(null, false, null, true);
-  game.combatBtns.appendChild(fightBtn);
-	game.combatBtns.appendChild(runBtn);
-	game.combatBtns.style.display = 'block';
-}
-
-function explore() {
-  try {
-    updateEnemyStats(null);
-
-    if (!game.player.foundBoss) {
-      if (Math.floor(Math.random() * 100) < game.constants.bossFindChance) {
-        game.player.foundBoss = true;
-        handleMessage(getRandomDialogue("bossFound"));
-        handleMessage(`You found the floor boss!`, true);
-        const floorBossCopy = scaleFloorBoss();
-        updateEnemyStats(floorBossCopy);
-        fightBossBtn.disabled = false;
-        return;
-      }
+// seed functions
+function sfc32(a, b, c, d) {
+    return function() {
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+        var t = (a + b) | 0;
+        a = b ^ b >>> 9;
+        b = c + (c << 3) | 0;
+        c = (c << 21 | c >>> 11);
+        d = d + 1 | 0;
+        t = t + d | 0;
+        c = c + t | 0;
+        return (t >>> 0) / 4294967296;
     }
+}
 
-    const encounterType = getRandomEncounter();
-    switch (encounterType) {
-      case 'enemy':
-    handleMessage(getRandomDialogue("enemyEncounter"));
-    handleMessage("What will you do?", true);
-    const randomIndex = Math.floor(Math.random() * game.player.enemiesOnFloor.length);
-    const enemyName = game.player.enemiesOnFloor[randomIndex];
-    const enemyTemplate = game.enemies.find(enemy => enemy.name === enemyName);
-    const scaledEnemy = scaleEnemyStats(enemyTemplate);
-    fight(scaledEnemy);
-    break;
-      case 'nothing':
-        handleMessage(getRandomDialogue("nothingFound"));
-        break;
-      case 'healing':
-        const healingAmount = Math.floor(Math.random() * (game.constants.healingShrineMax - game.constants.healingShrineMin)) + game.constants.healingShrineMin;
-        game.player.hp = Math.min(game.player.hp + healingAmount, game.calculations.playerStats(game.player.exp).maxHp);
-        handleMessage(getRandomDialogue("healingShrine"));
-        handleMessage(`You recovered ${healingAmount} HP!`, true);
-        break;
+function xmur3(str) {
+    for (var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = h << 13 | h >>> 19;
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function generateFloorBoss() {
-  try {
-    const availableEnemies = game.enemies.filter(enemy => game.player.enemiesOnFloor.includes(enemy.name));
-    const randomIndex = Math.floor(Math.random() * availableEnemies.length);
-    const floorBoss = availableEnemies[randomIndex];
-    game.player.floorBoss = floorBoss.name;
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function fightFloorBoss() {
-  try {
-    if (game.player.floorBoss) {
-      handleMessage(null, false, null, true);
-      const floorBossCopy = scaleFloorBoss();
-      handleMessage(getRandomDialogue("approachBoss"));
-      fight(floorBossCopy);
-    } else {
-      handleMessage("You haven't found the floor boss yet.");
+    return function() {
+        h = Math.imul(h ^ h >>> 16, 2246822507);
+        h = Math.imul(h ^ h >>> 13, 3266489909);
+        return (h ^= h >>> 16) >>> 0;
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
 }
 
-function scaleFloorBoss() {
-  try {
-    const floorBoss = game.enemies.find(enemy => enemy.name === game.player.floorBoss);
-    const scaledFloorBoss = scaleEnemyStats(floorBoss);
-    const floorBossCopy = JSON.parse(JSON.stringify(scaledFloorBoss));
-    floorBossCopy.isFloorBoss = true;
-    floorBossCopy.name += " (Floor Boss)";
-    floorBossCopy.maxHp = Math.floor(floorBossCopy.maxHp * game.constants.bossHpMultiplier);
-    floorBossCopy.hp = floorBossCopy.maxHp;
-    floorBossCopy.attack = Math.floor(floorBossCopy.attack * game.constants.bossAttackMultiplier);
-    floorBossCopy.gold = Math.floor(floorBossCopy.gold * game.constants.bossGoldMultiplier);
-    floorBossCopy.exp = Math.floor(floorBossCopy.exp * game.constants.bossExpMultiplier);
-    return floorBossCopy;
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+let randomFunction = Math.random;
+
+// important seed helper functions
+function seedRNG(seed) {
+    const seedHasher = xmur3(seed);
+    randomFunction = sfc32(seedHasher(), seedHasher(), seedHasher(), seedHasher());
 }
 
-function updateEnemyStats(enemy) {
-  if (enemy) {
-    enemyStats.innerHTML = `${enemy.name}<br>HP: ${enemy.hp}<br>Attack: ${enemy.attack}<br>`;
-    enemyStats.style.display = 'block';
-  } else {
-    enemyStats.innerHTML = '';
-    enemyStats.style.display = 'none';
-  }
+function choose(array) {
+    return array[Math.floor(rnd() * array.length)];
 }
 
-function generateEnemiesOnFloor() {
-  try {
-    if (game.player.floor === 1) {
-      let easyEnemy1, easyEnemy2, easyEnemy3;
+function rndInt(max) {
+    return Math.floor(rnd() * max);
+}
 
-      do {
-        easyEnemy1 = getRandomEnemy("easy");
-        easyEnemy2 = getRandomEnemy("easy");
-        easyEnemy3 = getRandomEnemy("easy");
-      } while (!easyEnemy1 || !easyEnemy2 || !easyEnemy3 || easyEnemy1.name === easyEnemy2.name || easyEnemy1.name === easyEnemy3.name || easyEnemy2.name === easyEnemy3.name);
+function rndBetween(min, max) {
+    return rnd() * (max - min) + min;
+}
 
-      game.player.enemiesOnFloor = [easyEnemy1.name, easyEnemy2.name, easyEnemy3.name];
-    } else {
-      const easyEnemy = getRandomEnemy("easy").name;
-      const mediumEnemy = getRandomEnemy("medium").name;
-      const hardEnemy = getRandomEnemy("hard").name;
+function fill(count, fn) {
+    return new Array(count).fill(undefined).map((x, i) => fn(i));
+}
 
-      game.player.enemiesOnFloor = [easyEnemy, mediumEnemy, hardEnemy];
+function flip(trueChance = 0.5) {
+    return rnd() < trueChance;
+}
+
+function rnd() {
+    return randomFunction();
+}
+//end of important seed helper functions
+//end seed functions
+
+const scales = {
+	harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
+    phrygianDominant: [0, 1, 4, 5, 7, 8, 10],
+    locrian: [0, 1, 3, 5, 6, 8, 10],
+    diminished: [0, 2, 3, 5, 6, 8, 9, 11]
+};
+
+const chordTypes = {
+    triad: [0, 2, 4],
+};
+
+function chooseRandomScale(currentScale) {
+    const scaleNames = Object.keys(scales);
+    if (currentScale === null) {
+        return scales[choose(scaleNames)];
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+    let newScaleName;
+    do {
+        newScaleName = choose(scaleNames);
+    } while (scales[newScaleName] === currentScale);
+    return scales[newScaleName];
 }
 
-function scaleEnemyStats(enemy) {
-  try {
-    const scalingFactor = 1 + (game.player.floor - 1) * game.constants.scalingFactorIncrease;
-    const scaledEnemy = JSON.parse(JSON.stringify(enemy));
-    scaledEnemy.hp = Math.floor(scaledEnemy.hp * scalingFactor);
-    scaledEnemy.maxHp = scaledEnemy.hp;
-    scaledEnemy.attack = Math.floor(scaledEnemy.attack * scalingFactor);
-    scaledEnemy.gold = Math.floor(scaledEnemy.gold * scalingFactor);
-    scaledEnemy.exp = Math.floor(scaledEnemy.exp * scalingFactor);
-    return scaledEnemy;
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+function modulate(key, scale) {
+    choose([
+        function() {
+            // Move to a random scale that isn't the current one
+            scale = chooseRandomScale(scale);
+        },
+        function() {
+            // Move around the cycle of fifths
+            if (Math.random() < 0.5) {
+                key = (key + 7) % 12;
+            } else {
+                key = (key + 5) % 12;
+            }
+        },
+    ])();
+    return [key, scale];
 }
 
-function createEnemy(enemyTemplate) {
-  try {
-    const newEnemy = JSON.parse(JSON.stringify(enemyTemplate));
-    newEnemy.hp = newEnemy.maxHp;
-    return newEnemy;
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+const PatternSize = 64;
+
+
+function getChord(context, rowIndex) {
+    const { progression, key, scale } = context;
+    const progIndex = Math.floor(rowIndex / 4);
+    const chordNumber = progression[progIndex];
+    return chordTypes.triad.map(noteIndex => key + scale[(chordNumber - 1 + noteIndex) % scale.length]);
 }
 
-function nextFloor() {
-  try {
-  game.player.floor++;
-  game.player.floorBoss = null;
-  game.player.foundBoss = false;
-  game.player.bossDead = false;
-  fightBossBtn.textContent = "Fight Boss";
-  fightBossBtn.onclick = fightFloorBoss;
-  fightBossBtn.disabled = true;
-  handleMessage(getRandomDialogue("newFloor"));
-  handleMessage(`You've reached floor ${game.player.floor}!`, true);
-  playMelody(game.soundEffects.nextFloor, game.settings.effectVolume);
-  generateEnemiesOnFloor();
-  generateFloorBoss();
-  updateEnemyStats(null);
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+
+
+function bass(context) {
+    return fill(PatternSize, i => {
+        const chord = getChord(context, i);
+        const palmMute = flip(0.5) ? 0.5 : 1; 
+        return {
+            note: i % 2 === 1 ? 'cont' : chord[0] + (Math.floor(i / 2) % 2) * 12 - 12,
+            vel: palmMute,
+            fx: { pulseWidth: 0 },
+        };
+    });
 }
 
-function getRandomDialogue(scenario) {
-  try {
-    const dialogues = game.text[scenario];
-    const randomIndex = Math.floor(Math.random() * dialogues.length);
-    return dialogues[randomIndex];
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+function bass2(context) {
+    return fill(PatternSize, i => {
+        const chord = getChord(context, i);
+        const noteOptions = [chord[0] - 4, chord[0] + 5, chord[0] - 12];
+        return { note: i % 8 === 0 ? choose(noteOptions) : 'cont', vel: 2, fx: { pulseWidth: rnd() } };
+    });
 }
 
-function usePotion() {
-  try {
-    if (game.player.potions > 0) {
-      const playerStats = game.calculations.playerStats(game.player.exp);
-      if (game.player.hp >= playerStats.maxHp) {
-        handleMessage("Your HP is already full.");
-      } else {
-        const healingAmount = game.constants.healingPotionAmount;
-        game.player.hp = Math.min(game.player.hp + healingAmount, playerStats.maxHp);
-        game.player.potions--;
-        handleMessage(`You used a potion and recovered ${healingAmount} HP!`);
-      }
-    } else {
-      handleMessage("You don't have any potions left.");
+
+function powerChord(rootNote) {
+    return [rootNote, rootNote + 7];
+}
+
+function riff(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.7);
+        const palmMute = flip(0.5) ? 0.5 : 1;
+        const chromaticRun = flip(0.25); 
+        const chromaticOffset = chromaticRun ? rndInt(4) - 2 : 0;
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + chromaticOffset : rootNote + chromaticOffset,
+            vel: palmMute,
+            fx: {
+                glide: flip(0.25) ? rndBetween(0.1, 0.7) : 0,
+            },
+        });
     }
-    updateEnemyStats(null);
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+    return pattern;
 }
 
-function updateCosts() {
-  const weaponCost = game.calculations.weaponCost(game.player.weaponTier);
-  const armorCost = game.calculations.armorCost(game.player.armorTier);
-  const potionCost = game.constants.potionCost;
-
-  document.getElementById('weaponCost').textContent = `${weaponCost} gold`;
-  document.getElementById('armorCost').textContent = `${armorCost} gold`;
-  document.getElementById('potionCost').textContent = `${potionCost} gold`;
-}
-
-  function openShop() {
-    try {
-	handleMessage(getRandomDialogue("shopEnter"));
-  setButtonVisibility(false);
-  shop.style.display = 'block';
-  updateEnemyStats(null);
-  updateCosts();
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function closeShop() {
-  try {
-  handleMessage(getRandomDialogue("shopExit"));
-  setButtonVisibility(true);
-  shop.style.display = 'none';
-  updateEnemyStats(null);
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function buyWeapon() {
-  try {
-    const cost = game.calculations.weaponCost(game.player.weaponTier);
-    if (game.player.gold >= cost) {
-      game.player.gold -= cost;
-      game.player.weaponTier++;
-      handleMessage(`You upgraded your weapon to Tier ${game.player.weaponTier}.`);
-      updateCosts();
-    } else {
-      handleMessage("You don't have enough gold to upgrade your weapon.");
+function aggressiveRiff(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.9);
+        const palmMute = flip(0.7) ? 0.5 : 1;
+        const chromaticRun = flip(0.3); 
+        const chromaticOffset = chromaticRun ? rndInt(4) - 2 : 0;
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + chromaticOffset : rootNote + chromaticOffset,
+            vel: palmMute,
+            fx: {
+                glide: flip(0.2) ? rndBetween(0.1, 0.7) : 0,
+            },
+        });
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+    return pattern;
 }
 
-function buyArmor() {
-  try {
-    const cost = game.calculations.armorCost(game.player.armorTier);
-    if (game.player.gold >= cost) {
-      game.player.gold -= cost;
-      game.player.armorTier++;
-	  game.player.hp += game.constants.armorHpBonus;
-      handleMessage(`You upgraded your armor to Tier ${game.player.armorTier}.`);
-      updateCosts();
-    } else {
-      handleMessage("You don't have enough gold to upgrade your armor.");
+function tremoloRiff(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.9);
+        const chromaticRun = flip(0.5);
+        const chromaticOffset = chromaticRun ? rndInt(4) - 2 : 0;
+        const intervalJump = flip(0.3) ? rndInt(5) - 2 : 0;
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + chromaticOffset : rootNote + chromaticOffset + intervalJump,
+            vel: 1,
+            len: 1,
+            fx: {
+                glide: flip(0.3) ? rndBetween(0.1, 0.7) : 0,
+            },
+        });
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+    return pattern;
 }
 
-  function buyPotion() {
-    try {
-    const potionCost = game.constants.potionCost;
-    if (game.player.gold >= potionCost) {
-      game.player.gold -= potionCost;
-      game.player.potions++;
-      handleMessage(`You bought a potion. You now have ${game.player.potions} potions.`);
-      updateCosts();
-    } else {
-      handleMessage("You don't have enough gold to buy a potion.");
+function epicMetalSolo(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.9);
+        const palmMute = flip(0.5) ? 0.5 : 1;
+        const chromaticRun = flip(0.5);
+        const chromaticOffset = chromaticRun ? rndInt(4) - 2 : 0;
+        const fastNotes = flip(0.8);
+        const noteLength = fastNotes ? 1 : 2;
+        const pinchHarmonic = flip(0.2);
+        const tapping = flip(0.15);
+        const sweepPicking = flip(0.1);
+        const legato = flip(0.3);
+        
+        const fxOptions = {
+            pinchHarmonic: pinchHarmonic ? rndBetween(0.5, 1) : 0,
+            tapping: tapping ? rndBetween(0.5, 1) : 0,
+            sweepPicking: sweepPicking ? rndBetween(0.5, 1) : 0,
+            legato: legato ? rndBetween(0.5, 1) : 0,
+            glide: flip(0.3) ? rndBetween(0.1, 0.7) : 0,
+        };
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + chromaticOffset : rootNote + chromaticOffset,
+            vel: palmMute,
+            len: noteLength,
+            fx: fxOptions,
+        });
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
+    return pattern;
 }
 
-function setButtons(enable, fightBtn, runBtn) {
-  try {
-    if (fightBtn) {
-      combatBtns.innerHTML = '';
-		game.combatBtns.style.display = 'none';
-    }
-    if (runBtn) {
-      combatBtns.innerHTML = '';
-		game.combatBtns.style.display = 'none';
-    }
+function gallopRhythm(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.9);
+        const palmMute = flip(0.5) ? 0.5 : 1;
+        const noteLength = i % 4 === 0 ? 2 : 1;
+        const intervalJump = flip(0.2) ? rndInt(4) - 2 : 0;
 
-    exploreBtn.disabled = !enable;
-    usePotionBtn.disabled = !enable;
-    shopBtn.disabled = !enable;
-    fightBossBtn.disabled = !(enable && game.player.foundBoss);
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + intervalJump : rootNote + intervalJump,
+            vel: palmMute,
+            len: noteLength,
+            fx: {
+                glide: flip(0.3) ? rndBetween(0.1, 0.7) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function chuggingRhythm(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const chug = i % 2 === 0 && flip(0.9);
+        const noteLength = chug ? 1 : 2;
+        const intervalJump = flip(0.15) ? rndInt(4) - 2 : 0;
+
+        pattern.push({
+            note: chug ? choose(powerChordNotes) + intervalJump : rootNote + intervalJump,
+            vel: chug ? 0.5 : 1,
+            len: noteLength,
+            fx: {
+                glide: flip(0.3) ? rndBetween(0.1, 0.7) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function alternatePicking(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.7);
+        const chromaticRun = flip(0.2);
+        const chromaticOffset = chromaticRun ? rndInt(4) - 2 : 0;
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) + chromaticOffset : rootNote + chromaticOffset,
+            vel: 1,
+            fx: {
+                alternatePicking: flip(0.8) ? rndBetween(0.5, 1) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function sweepArpeggios(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.9);
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) : rootNote,
+            vel: 1,
+            fx: {
+                sweepArpeggio: flip(0.5) ? rndBetween(0.5, 1) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function harmonics(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.7);
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) : rootNote,
+            vel: 1,
+            fx: {
+                harmonic: flip(0.2) ? rndBetween(0.5, 1) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function sliding(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.7);
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) : rootNote,
+            vel: 1,
+            fx: {
+                sliding: flip(0.4) ? rndBetween(0.5, 1) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function dimebagWhammy(context) {
+    const octave = choose([0, 12, 24]);
+    const pattern = [];
+    for (let i = 0; i < PatternSize; i++) {
+        const chord = getChord(context, i);
+        const rootNote = chord[0] + octave;
+        const powerChordNotes = powerChord(rootNote);
+        const usePowerChord = flip(0.7);
+
+        pattern.push({
+            note: usePowerChord ? choose(powerChordNotes) : rootNote,
+            vel: 1,
+            fx: {
+                dimebagWhammy: flip(0.15) ? rndBetween(0.5, 1) : 0,
+            },
+        });
+    }
+    return pattern;
+}
+
+function emptyNote() {
+    return fill(PatternSize, _ => ({ note: '---' }));
+}
+
+function emptyDrum() {
+    return fill(PatternSize, _ => ({ drum: '---' }));
+}
+
+
+function metalDrum() {
+    return fill(PatternSize, i => ({
+        drum: i % 8 === 0 ? 'KCK' :
+            i % 8 === 4 ? 'SNR' :
+                (i % 2 === 0 && flip(0.8)) ? 'KCK' :
+                    flip(0.3) ? choose(['KCK', 'SNR']) : 'NSS',
+        vel: 0.6 + 0.2 * (1 - (i % 2)),
+        doubleBass: i % 4 === 2 ? 'KCK' : '---',
+    }));
+}
+
+function aggressiveMetalDrum() {
+    return fill(PatternSize, i => ({
+        drum: i % 8 === 0 ? 'KCK' :
+            i % 8 === 4 ? 'SNR' :
+                (i % 2 === 0 && flip(0.85)) ? 'KCK' :
+                    flip(0.35) ? choose(['KCK', 'SNR', 'CYM']) : 'NSS',
+        vel: 0.6 + 0.2 * (1 - (i % 2)),
+        doubleBass: i % 2 === 0 || flip(0.6) ? 'KCK' : '---', 
+        fill: i % 16 === 15 ? choose(['SDR', 'CYM', 'FTM']) : '---',
+    }));
+}
+
+function blastBeatDrum() {
+    return fill(PatternSize, i => ({
+        drum: i % 2 === 0 ? 'KCK' : 'SNR',
+        vel: 0.6 + 0.2 * (1 - (i % 2)),
+        doubleBass: '---',
+    }));
+}
+
+function breakdownDrum() {
+    return fill(PatternSize, i => ({
+        drum: i % 8 === 0 ? 'KCK' :
+            i % 8 === 4 ? 'SNR' :
+                (i % 4 === 0 && flip(0.4)) ? 'CYM' :
+                    (i % 4 === 2 && flip(0.3)) ? 'FTM' : 'NSS',
+        vel: 0.6 + 0.2 * (1 - (i % 2)),
+        doubleBass: i % 8 === 0 ? 'KCK' : '---',
+    }));
+}
+
+const progressions=[
+	[1,1,6,6,4,4,5,5,3,3,4,4,5,5,6,6],
+	[1,1,6,6,4,4,5,5,1,1,6,6,3,3,5,5],
+	[4,4,5,5,1,1,1,1,5,5,6,6,1,1,1,1],
+	[1,1,6,6,2,2,5,5,1,1,6,6,2,2,5,5],
+	[5,5,1,1,6,6,4,4,5,5,1,1,6,6,4,4],
+	[1,1,4,4,5,5,1,1,6,6,4,4,5,5,1,1],
+	[5,5,4,4,1,1,1,1,5,5,6,6,1,1,1,1],
+	[5,5,6,6,2,2,4,4,5,5,6,6,2,2,4,4],
+	[6,6,1,1,4,4,3,3,6,6,1,1,4,4,3,3],
+	[4,4,1,1,5,5,6,6,4,4,1,1,5,5,6,6],
+	[6,6,6,6,5,5,5,5,4,4,4,4,5,5,5,5],
+	[1,1,1,1,3,3,3,3,4,4,4,4,5,5,5,5],
+	[6,6,6,6,4,4,4,4,1,1,1,1,1,1,5,5],
+	[1,1,4,4,6,6,5,5,1,1,4,4,6,6,5,5],
+	[1,1,6,6,4,4,5,5,1,1,6,6,4,4,5,5],
+	[1,1,6,6,5,5,4,4,1,1,6,6,5,5,4,4],
+	[1,1,4,4,6,6,2,2,1,1,4,4,6,6,2,2]
+];
+
+function bpmClock() {
+    let intervalHandle = {
+        bpmClock: 0
+    };
+    let fN = 0;
+    function set(bpm, frameFunction) {
+        window.clearInterval(intervalHandle.bpmClock);
+        intervalHandle.bpmClock = window.setInterval(() => frameFunction(fN++), (60000 / bpm) / 4);
+    }
+    function stop() {
+        window.clearInterval(intervalHandle.bpmClock);
+    }
+    return {
+        set,
+        stop
+    }
+}
+
+function mutateState(state) {
+    state.songIndex++;
+    if (state.songIndex % 8 === 0) {
+        state.bpm = rndInt(40) + 110;
+    }
+    if (state.songIndex % 4 === 0) {
+        [state.key, state.scale] = modulate(state.key, state.scale);
+    }
+    if (state.songIndex % 2 === 0) {
+        state.progression = choose(progressions);
+    }
+    state.seedCode = hex(rndInt(255)) + hex(rndInt(255)) + hex(rndInt(255)) + hex(rndInt(255));
+    seedRNG(state.seedCode);
 	
-	saveBtn.disabled = !enable;
-    loadBtn.disabled = !enable;
-    exportBtn.disabled = !enable;
-    importBtn.disabled = !enable;
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
 }
 
-function setButtonVisibility(visible) {
-  const display = visible ? 'inline' : 'none';
-  exploreBtn.style.display = display;
-  usePotionBtn.style.display = display;
-  shopBtn.style.display = display;
-  fightBossBtn.style.display = display;
-  
-  settingsBtn.style.display = display;
-  saveBtn.style.display = display;
-    loadBtn.style.display = display;
-    exportBtn.style.display = display;
-    importBtn.style.display = display;
-}
+let trackControl;
 
-function saveGame(autoSave = true) {
-  try {
-  const saveData = btoa(JSON.stringify(game.player));
-    localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.save', saveData);
-  
-  if (autoSave) {
-  console.log('autosave successful');
-  } else {
-    handleMessage('Game saved successfully!<br>Please note that clearing browser cache will wipe save data!');
-	}
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
+function genTrack() {
+    const seedOrSave = Math.random().toString();
+    const state = createInitialState(seedOrSave);
+	
+    let patterns = [[], [], [], [], []];
 
-function loadGame() {
-  try {
-    const saveData = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
-    if (saveData) {
-      game.player = JSON.parse(atob(saveData));
-      handleMessage('Game loaded successfully!');
-      handleMessage(getRandomDialogue("loadGame"), true);
-      updateEnemyStats(null);
+    const clock = bpmClock();
 
-      if (game.player.bossDead) {
-        fightBossBtn.textContent = "Next Floor";
-        fightBossBtn.onclick = nextFloor;
-        fightBossBtn.disabled = false;
-      } else {
-        fightBossBtn.textContent = "Fight Boss";
-        fightBossBtn.onclick = fightFloorBoss;
-        fightBossBtn.disabled = !game.player.foundBoss;
-      }
-    } else {
-      handleMessage('No saved game data found.');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const au = Audio(ctx);
+	
+	const synths = [
+    au.SquareSynth(),
+    au.SquareSynth(-0.5),
+    au.SquareSynth(),
+    au.SquareSynth(0.5),
+    au.DrumSynth()
+];
+	
+    function newPatterns() {
+        seedRNG(state.seedCode);
+        patterns = [
+            choose([bass, bass2, emptyNote])(state),
+            rnd() < 0.80 ? choose([riff, aggressiveRiff, tremoloRiff, gallopRhythm, chuggingRhythm, alternatePicking, sweepArpeggios, harmonics, sliding, dimebagWhammy, aggressiveRiff, riff])(state) : emptyNote(),
+            rnd() < 0.80 ? choose([riff, aggressiveRiff, tremoloRiff, gallopRhythm, chuggingRhythm, alternatePicking, sweepArpeggios, harmonics, sliding, dimebagWhammy, aggressiveRiff, riff])(state) : epicMetalSolo(state),
+            choose([emptyNote, riff, emptyNote, tremoloRiff, emptyNote, aggressiveRiff, emptyNote, harmonics, emptyNote, sliding])(state),
+            rnd() < 0.90 ? choose([metalDrum, aggressiveMetalDrum, breakdownDrum, metalDrum, aggressiveMetalDrum, breakdownDrum, metalDrum, aggressiveMetalDrum, blastBeatDrum, breakdownDrum, metalDrum, aggressiveMetalDrum, breakdownDrum, metalDrum, aggressiveMetalDrum, breakdownDrum])(state) : emptyNote(),
+        ];
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function exportSave() {
-  try {
-    const saveData = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
-    if (saveData) {
-      const a = document.createElement('a');
-      a.href = 'data:text/plain;charset=utf-8,' + saveData;
-      a.download = 'SerRat&ChatGPTsEndlessTextBasedRPG.save';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      handleMessage('Save file exported successfully!');
-    } else {
-      handleMessage('No saved game data found.');
-    }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function importSave(event) {
-  try {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const saveData = e.target.result;
-          localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.save', saveData);
-          loadGame();
-          handleMessage('Save file imported successfully!');
-        } catch (error) {
-          handleMessage(null, false, error);
+    function frame(f) {
+        const positionInPattern = f % PatternSize;
+        if (f % 128 === 0 && f !== 0) {
+            mutateState(state);
+            newPatterns();
+            clock.set(state.bpm, frame);
+			
+			console.log(patterns);
+			console.log(state);
+			console.log(save(state));
         }
-      };
-      reader.readAsText(file);
+		synths[0].play(patterns[0][positionInPattern]);
+        synths[1].play(patterns[1][positionInPattern]);
+        synths[2].play(patterns[2][positionInPattern]);
+        synths[3].play(patterns[3][positionInPattern]);
+        synths[4].play(patterns[4][positionInPattern]);
     }
-  } catch (error) {
-    handleMessage(null, false, error);
-  }
-}
-
-function triggerFileInput() {
-  fileInput.click();
-}
-
-function resetSaveData() {
-  const confirmation = confirm("Are you sure you want to reset your save data? This action cannot be undone.");
-
-  if (confirmation) {
-  closeSettings();
-    localStorage.removeItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
+	function stop() {
+		synths.forEach(synth => synth.stop());
+		clock.stop();
+		ctx.close();
+		return;
+	}
+	function changeVolume(volume) {
+		au.setVolume(volume);
+	}
 	
-    handleMessage('Save data reset successfully.');
+	newPatterns();
+    clock.set(state.bpm, frame);
+
+	console.log(patterns);
+	console.log(state);
+	console.log(save(state));
 	
-    startGame();
-  }
- }
-
-const noteToFrequencyMap = {
-    'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
-    'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
-    'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
-    'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.26, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77,
-    'C6': 1046.50, 'C#6': 1108.73, 'D6': 1174.66, 'D#6': 1244.51, 'E6': 1318.51, 'F6': 1396.91, 'F#6': 1479.98, 'G6': 1567.98, 'G#6': 1661.22, 'A6': 1760.00, 'A#6': 1864.66, 'B6': 1975.53,
-  };
-  let audioContext, compressor, gainNode,loopedSource, loopedMelody
-  let waveformType, attack, decay, sustain, release, lowPassStrength;
-  let fadeInDuration, fadeOutDuration;
-
-function initAudioContext() {
-
-  audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  compressor = audioContext.createDynamicsCompressor();
-
-  compressor.threshold.value = -40;
-  compressor.knee.value = 40;
-  compressor.ratio.value = 8;
-  compressor.attack.value = 0.001;
-  compressor.release.value = 0.1;
-
-  gainNode = audioContext.createGain();
-  gainNode.connect(compressor);
-  compressor.connect(audioContext.destination);
-  
-  //sounds settings
-	waveformType = 'sawtooth';
-attack = 0.004;
-decay = 0.14;
-sustain = 0.38;
-release = 0.18;
-lowPassStrength = 0.7;
-fadeInDuration = 0.002;
-fadeOutDuration = 0.002;
-	//end of sound settings
+	return {
+		stop,
+		changeVolume
+	}
 }
 
-async function checkAudioContext() {
-  if (audioContext.state === 'suspended') {
-    return audioContext.resume();
-  }
-}
-  
-async function playMelody(melody, volume, loop = false) {
-if (!loop && game.settings.effectVolume === 0) {
-    return;
-  }
+function playEffect(effect) {
+    const clock = bpmClock();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const au = Audio(ctx);
+    au.setVolume(settings.effectVolume);
 
-  await checkAudioContext();
+    const synths = [
+        au.SquareSynth(),
+        au.SquareSynth(-0.5),
+        au.SquareSynth(0.5)
+    ];
 
-  const source = audioContext.createBufferSource();
-  source.buffer = generateAudioBuffer(melody);
-  source.loop = loop;
-
-  source.connect(gainNode);
-
-  if (loop) {
-    if (loopedSource) {
-      loopedSource.disconnect(gainNode);
-    }
-    loopedSource = source;
-    loopedMelody = { melody, volume };
-  } else {
-    if (loopedSource) {
-      loopedSource.disconnect(gainNode);
-      source.onended = () => {
-        loopedSource.connect(gainNode);
-		gainNode.gain.value = game.settings.trackVolume;
-      };
-    }
-  }
-
-  gainNode.gain.value = volume;
-  source.start();
-
-  return source;
-}
-
-function generateAudioBuffer(melody) {
-  const gapDuration = 0.001;
-  const melodyDuration = melody.reduce((acc, note) => acc + note[1] + gapDuration, 0);
-  const audioBuffer = audioContext.createBuffer(1, audioContext.sampleRate * melodyDuration, audioContext.sampleRate);
-  const audioBufferData = audioBuffer.getChannelData(0);
-
-  let currentSample = 0;
-
-  for (const [note, duration] of melody) {
-    const frequency = noteToFrequencyMap[note];
-    const samplesPerCycle = Math.round(audioContext.sampleRate / frequency);
-    const cycles = Math.round(duration * audioContext.sampleRate);
-
-    const noteBuffer = new Float32Array(cycles);
-    for (let i = 0; i < cycles; i++) {
-      switch (waveformType) {
-    case 'sine':
-      noteBuffer[i] = Math.sin(2 * Math.PI * (i % samplesPerCycle) / samplesPerCycle);
-      break;
-    case 'square':
-      noteBuffer[i] = ((i % samplesPerCycle) / samplesPerCycle < 0.5 ? 1 : -1) * 0.1;
-      break;
-    case 'triangle':
-      noteBuffer[i] = 4 * (i % samplesPerCycle) / samplesPerCycle - 1;
-      if (noteBuffer[i] > 1) noteBuffer[i] = 2 - noteBuffer[i];
-      break;
-    case 'sawtooth':
-      noteBuffer[i] = (2 * (i % samplesPerCycle) / samplesPerCycle - 1) * 0.1;
-      break;
-    default:
-      noteBuffer[i] = Math.sin(2 * Math.PI * (i % samplesPerCycle) / samplesPerCycle);
-  }
+    function noteToMidi(note) {
+        const octave = parseInt(note.slice(-1));
+        const pitchClass = note.slice(0, -1);
+        const pitchClassToNumber = {
+            "C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4,
+            "F": 5, "F#": 6, "G": 7, "G#": 8, "A": 9,
+            "A#": 10, "B": 11
+        };
+        return 12 * octave + pitchClassToNumber[pitchClass];
     }
 
-    applyADSR(noteBuffer, audioContext.sampleRate, attack, decay, sustain, release);
-    applyLowPassFilter(noteBuffer, lowPassStrength);
+    const pattern = effect.notes.map(note => ({ note: note === "---" ? "---" : noteToMidi(note) }));
 
-    for (let i = 0; i < noteBuffer.length; i++) {
-      audioBufferData[currentSample++] = noteBuffer[i];
+    function frame(f) {
+		const positionInPattern = f % pattern.length;
+		if (f === pattern.length) {
+			synths.forEach(synth => synth.stop());
+			setTimeout(() => {
+				ctx.close();
+				clock.stop();
+			}, 60 / effect.bpm * 1000);
+			return;
+		}
+		au.setVolume(settings.effectVolume);
+        synths.forEach((synth, i) => {
+            synth.play(pattern[positionInPattern]);
+        });
     }
-    currentSample += Math.round(gapDuration * audioContext.sampleRate);
-  }
-
-  return audioBuffer;
+    clock.set(effect.bpm, frame);
 }
 
-function applyLowPassFilter(buffer, alpha) {
-  let prevOutput = 0;
-  for (let i = 0; i < buffer.length; i++) {
-    buffer[i] = prevOutput + alpha * (buffer[i] - prevOutput);
-    prevOutput = buffer[i];
-  }
+
+// start of save/load
+function hex(v) {
+    return Math.floor(v).toString(16).toUpperCase().padStart(2, '0');
 }
 
-function applyADSR(buffer, sampleRate, attack, decay, sustain, release) {
-  const fadeInSamples = Math.round(sampleRate * fadeInDuration);
-  const fadeOutSamples = Math.round(sampleRate * fadeOutDuration);
+function unhex(v) {
+    return parseInt(v, 16);
+}
 
-  const attackSamples = Math.round(sampleRate * attack);
-  const decaySamples = Math.round(sampleRate * decay);
-  const releaseSamples = Math.round(sampleRate * release);
-  const sustainLevel = sustain;
+function save(state) {
+    const nonRandomElements = [
+        state.key,
+        Object.keys(scales).indexOf(Object.keys(scales).find(key => scales[key] === state.scale)),
+        progressions.indexOf(state.progression),
+        state.bpm,
+        state.songIndex % 256
+    ];
+    const saveCode = "0x" + nonRandomElements.map(hex).join("") + state.seedCode;
+    return saveCode;
+}
 
-  for (let i = 0; i < buffer.length; i++) {
-    if (i < fadeInSamples) {
-      buffer[i] *= i / fadeInSamples;
-    } else if (i < attackSamples) {
-      buffer[i] *= i / attackSamples;
-    } else if (i < attackSamples + decaySamples) {
-      buffer[i] *= sustainLevel + (1 - sustainLevel) * (1 - (i - attackSamples) / decaySamples);
-    } else if (i >= buffer.length - releaseSamples - fadeOutSamples) {
-      buffer[i] *= (buffer.length - i - fadeOutSamples) / releaseSamples;
-    } else if (i >= buffer.length - fadeOutSamples) {
-      buffer[i] *= (buffer.length - i) / fadeOutSamples;
+function restore(code) {
+    const codeString = code.slice(2);
+    const key = unhex(codeString.slice(0, 2));
+    const scale = scales[Object.keys(scales)[unhex(codeString.slice(2, 4))]];
+    const progression = progressions[unhex(codeString.slice(4, 6))];
+    const bpm = unhex(codeString.slice(6, 8));
+    const songIndex = unhex(codeString.slice(8, 10));
+    const seedCode = codeString.slice(10);
+    return {
+        bpm,
+        key,
+        progression,
+        scale,
+        seedCode,
+        songIndex
+    };
+}
+
+function createInitialState(seedOrSave) {
+    if (seedOrSave.startsWith("0x")) {
+        return restore(seedOrSave);
     } else {
-      buffer[i] *= sustainLevel;
+        const seed = (seedOrSave && seedOrSave.length > 0) ? seedOrSave : "" + rnd();
+        seedRNG(seed);
+        
+        return {
+            key: rndInt(12),
+            scale: chooseRandomScale(),
+            progression: progressions[rndInt(12)],
+            bpm: rndInt(40) + 110,
+            seedCode: createSeedCode(),
+            songIndex: 0
+        };
     }
-  }
 }
 
-function playSoundtrack() {
+function createSeedCode() {
+    return hex(rndInt(255)) + hex(rndInt(255)) + hex(rndInt(255)) + hex(rndInt(255));
+}
+// end of save/load
 
-  const soundtrackKeys = Object.keys(game.soundTracks);
-  const randomKey = soundtrackKeys[Math.floor(Math.random() * soundtrackKeys.length)];
-  const randomTrack = game.soundTracks[randomKey];
+//beginning of audio
+const A3Frequency = 440;
+const A0Frequency = A3Frequency / 8;
 
-  playMelody(randomTrack, game.settings.trackVolume, true);
+function Audio(ctx) {
+	const globalGain = gainNode();
+	globalGain.connect(ctx.destination);
+	
+	function setVolume(value) {
+        globalGain.gain.setValueAtTime(value, ctx.currentTime);
+    }
+    function oscillatorNode(type, freq = 440) {
+        const node = ctx.createOscillator();
+        node.type = type;
+        node.frequency.value = freq;
+        return node;
+    }
+    function waveShaperNode(curve) {
+        const node = ctx.createWaveShaper();
+        node.curve = new Float32Array(curve);
+        return node;
+    }
+    function gainNode(gainAmount = 0) {
+        const node = ctx.createGain();
+        node.gain.value = gainAmount;
+        return node;
+    }
+    function stereoPannerNode(pan) {
+        if (ctx.createStereoPanner) {
+            const node = ctx.createStereoPanner();
+            node.pan.value = pan;
+            return node;
+        } else {
+            const node = ctx.createPanner();
+            node.panningModel = "equalpower";
+            node.setPosition(pan, 0, 0.5);
+            node.pan = node.positionX;
+            return node;
+        }
+    }
+
+    function SquareSynth(pan = 0) {
+        const set = (a, v) => { a.cancelScheduledValues(ctx.currentTime); a.setValueAtTime(v, ctx.currentTime); };
+        const towards = (a, v, t) => { a.setTargetAtTime(t, ctx.currentTime, t) };
+        const slide = (a, v, t) => { a.cancelScheduledValues(ctx.currentTime); a.setTargetAtTime(v, ctx.currentTime, t) };
+
+        const wavetableTrigger = oscillatorNode("sawtooth"),
+            pulseWavetable = waveShaperNode(new Float32Array(256).fill(-1, 0, 128).fill(1, 128, 256)),
+            alwaysOneWavetable = waveShaperNode(new Float32Array(2).fill(1, 0, 2)),
+            wavetableOffsetGain = gainNode(),
+            pulseOutputGain = gainNode(),
+            outputPanner = stereoPannerNode(pan);
+        wavetableTrigger.start();
+        wavetableTrigger.connect(pulseWavetable);
+        wavetableTrigger.connect(alwaysOneWavetable);
+        alwaysOneWavetable.connect(wavetableOffsetGain);
+        wavetableOffsetGain.connect(pulseWavetable);
+        pulseWavetable.connect(pulseOutputGain);
+        pulseOutputGain.connect(outputPanner);
+		outputPanner.connect(globalGain);
+
+        const freq = wavetableTrigger.frequency,
+            width = wavetableOffsetGain.gain,
+            gain = pulseOutputGain.gain;
+
+        const decay = 0.04, sustain = 0.7, release = 0.01, level = 0.1;
+
+        function noteOn(note, glide = 0) {
+            const glideTime = glide / 10;
+            slide(freq, A0Frequency * 2 ** (note / 12), glideTime);
+            set(gain, level);
+            towards(gain, level * sustain, decay);
+        }
+        function noteOff() {
+            slide(gain, 0, release);
+        }
+        function play(note) {
+            if (note.note === "---") {
+                noteOff();
+            } else if (note.note === 'cont') {
+                // do nothing
+            } else {
+                noteOn(note.note, note.fx ? note.fx.glide : undefined);
+            }
+            set(width, note.fx ? (note.fx.pulseWidth || 0.0) : 0.0);
+        }
+		function stop() {
+			const releaseTime = 0.01;
+			gain.cancelScheduledValues(ctx.currentTime);
+			gain.setTargetAtTime(0, ctx.currentTime, releaseTime);
+			setTimeout(() => {
+				outputPanner.disconnect();
+			}, releaseTime * 1000);
+		}
+		return { play, stop }
+    }
+	
+	function DrumSynth() {
+    const toneOscillator = oscillatorNode("square", 55),
+        toneGain = gainNode(),
+        noiseWavetableTrigger = oscillatorNode("sawtooth", 20),
+        noiseWavetable = waveShaperNode(fill(1024, x => rnd() * 2 - 1)),
+        noiseGain = gainNode(),
+        noisePan = stereoPannerNode(0);
+
+    toneOscillator.start();
+    noiseWavetableTrigger.start();
+
+    toneOscillator.connect(toneGain);
+    toneGain.connect(globalGain);
+
+    noiseWavetableTrigger.connect(noiseWavetable);
+    noiseWavetable.connect(noiseGain);
+    noiseGain.connect(noisePan);
+    noisePan.connect(globalGain);
+
+		function play(slot) {
+			const vel = slot.vel ? slot.vel : 1;
+			if (slot.drum === 'KCK') {
+				toneOscillator.detune.cancelScheduledValues(ctx.currentTime);
+				toneOscillator.detune.setValueAtTime(3000, ctx.currentTime);
+				toneOscillator.detune.setTargetAtTime(0, ctx.currentTime, 0.07);
+				toneGain.gain.cancelScheduledValues(ctx.currentTime);
+				toneGain.gain.setValueAtTime(0.2 * vel, ctx.currentTime);
+				toneGain.gain.setValueCurveAtTime(new Float32Array([0.2 * vel, 0.2 * vel, 0.13 * vel, 0.05 * vel, 0.0]), ctx.currentTime, 0.10);
+			} else if (slot.drum === 'NSS') {
+				noiseGain.gain.cancelScheduledValues(ctx.currentTime);
+				noiseGain.gain.setValueAtTime(0.1 * vel, ctx.currentTime);
+				noiseGain.gain.setValueCurveAtTime(new Float32Array([0.1 * vel, 0.04 * vel, 0.0]), ctx.currentTime, 0.08);
+
+				if ("pan" in noisePan) {
+					noisePan.pan.cancelScheduledValues(ctx.currentTime);
+					noisePan.pan.setValueAtTime(rnd() * 0.4 - 0.2, ctx.currentTime);
+				}
+			} else if (slot.drum === 'SNR') {
+				toneOscillator.detune.cancelScheduledValues(ctx.currentTime);
+				toneOscillator.detune.setValueAtTime(2400, ctx.currentTime);
+				toneOscillator.detune.setTargetAtTime(600, ctx.currentTime, 0.04);
+				toneGain.gain.cancelScheduledValues(ctx.currentTime);
+				toneGain.gain.setValueAtTime(0.15 * vel, ctx.currentTime);
+				toneGain.gain.setValueCurveAtTime(new Float32Array([0.2 * vel, 0.2 * vel, 0.13 * vel, 0.05 * vel, 0.0]), ctx.currentTime, 0.10);
+
+				noiseGain.gain.cancelScheduledValues(ctx.currentTime);
+				noiseGain.gain.setValueAtTime(0.2 * vel, ctx.currentTime);
+				noiseGain.gain.setValueCurveAtTime(new Float32Array([0.2 * vel, 0.15 * vel, 0.0]), ctx.currentTime, 0.15);
+			}
+		}
+		function stop() {
+			const releaseTime = 0.01;
+
+			toneGain.gain.cancelScheduledValues(ctx.currentTime);
+			toneGain.gain.setTargetAtTime(0, ctx.currentTime, releaseTime);
+			setTimeout(() => {
+				toneGain.disconnect();
+			}, releaseTime * 1000);
+			noiseGain.gain.cancelScheduledValues(ctx.currentTime);
+			noiseGain.gain.setTargetAtTime(0, ctx.currentTime, releaseTime);
+			setTimeout(() => {
+				noiseGain.disconnect();
+			}, releaseTime * 1000);
+		}
+		return {
+			play,
+			stop,
+		}
+	}
+	return {
+		SquareSynth,
+		DrumSynth,
+		setVolume
+	}
+}
+//end of audio
+
+let settings = {
+    trackVolume: 0.5,
+	effectVolume: 0.5
+};
+
+
+function tglSet() {
+  const isSettingsOpen = settingsMenu.style.display === 'block';
+  settingsMenu.style.display = isSettingsOpen ? 'none' : 'block';
+  gameContainer.style.display = isSettingsOpen ? 'flex' : 'none';
 }
 
-function openSettings() {
-  settingsMenu.style.display = 'block';
-  gameContainer.style.display = 'none';
-}
+function updateVolume(volumeType, volume) {
+  settings[volumeType] = parseFloat(volume.target.value) / 100;
 
-function closeSettings() {
-  settingsMenu.style.display = 'none';
-  gameContainer.style.display = 'flex';
-}
-
-function updateTrackVolume(volume) {
-  game.settings.trackVolume = parseFloat(volume.target.value) / 100 * 0.4;
-  gainNode.gain.value = game.settings.trackVolume;
-  updateSliderValues()
-  saveSettings();
-}
-
-function updateEffectVolume(volume) {
-  game.settings.effectVolume = parseFloat(volume.target.value) / 100 * 0.4;
   updateSliderValues();
   saveSettings();
 }
 
-function saveSettings() {
-  localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.settings', JSON.stringify(game.settings));
-}
 
 function setSliderPositions() {
-  trackVolume.value = game.settings.trackVolume * 100 / 0.4;
-  effectVolume.value = game.settings.effectVolume * 100 / 0.4;
+  trackVolume.value = settings.trackVolume * 100;
+  effectVolume.value = settings.effectVolume * 100;
 }
 
 function updateSliderValues() {
@@ -1453,45 +1982,50 @@ function updateSliderValues() {
   effectVolumeValue.textContent = `${effectVolume.value}%`;
 }
 
+function saveSettings() {
+  localStorage.setItem('SerRat&ChatGPTsEndlessTextBasedRPG.settings', JSON.stringify(settings));
+}
+
 function loadSettings() {
   const storedSettings = localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.settings');
   if (storedSettings) {
-    game.settings = JSON.parse(storedSettings);
+    settings = JSON.parse(storedSettings);
   }
   setSliderPositions();
   updateSliderValues();
 }
 
 function startGame() {
-	if (!audioContext) {
-		initAudioContext();
-	}
 	titleScreen.style.display = 'none';
 	gameContainer.style.display = 'flex';
-	playSoundtrack();
-  
+	loadSettings();
+	trackControl = genTrack();
+	trackControl.changeVolume(settings.trackVolume);
 	if (localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save') != null) {
 		loadGame();
+		updBossBtn();
 	} else {
-		game.player = {
-		exp: 0, hp: game.constants.baseMaxHp, gold: 0, weaponTier: 0, armorTier: 0, potions: game.constants.basePotions, floor: 1,
-		floorBoss: null, foundBoss: false, bossDead: false, enemiesOnFloor: [], };
+		plr = {
+  exp: 0, hp: scale.baseMaxHp, gold: 0, wTier: 0, aTier: 0, pot: scale.basePot, flr: 1,
+  flrB: null, fndB: false, deadB: false, enmy: [], };
   
-		generateEnemiesOnFloor();
-		generateFloorBoss();
+		genEnemies();
 		updateEnemyStats(null);
-		handleMessage(getRandomDialogue("startGame"), true);
+		msg(randDlg('startGame'), true);
 	}
+	
 }
 
 startBtn.onclick = startGame;
 exploreBtn.onclick = explore;
-usePotionBtn.onclick = usePotion;
-shopBtn.onclick = openShop;
-closeShopBtn.onclick = closeShop;
-buyWeaponBtn.onclick = buyWeapon;
-buyArmorBtn.onclick = buyArmor;
-buyPotionBtn.onclick = buyPotion;
+usePotBtn.onclick = () => { usePot(false); };
+maxPotionsBtn.onclick = () => { usePot(true); };
+shopBtn.onclick = tglShop;
+closeShopBtn.onclick = tglShop;
+buyWeaponBtn.onclick = () => { buyItem('weapon') };
+buyArmorBtn.onclick = () => { buyItem('armor') };
+buyPotionBtn.onclick = () => { buyPots(false); };
+buyMaxPotionsBtn.onclick = () => { buyPots(true); };
 fightBossBtn.onclick = fightFloorBoss;
   
 saveBtn.onclick = () => { saveGame(false); };
@@ -1501,13 +2035,18 @@ importBtn.onclick = triggerFileInput;
 fileInput.onchange = importSave;
 resetSaveBtn.onclick = resetSaveData;
 
-settingsBtn.onclick = openSettings;
-closeSettingsBtn.onclick = closeSettings;
-trackVolume.oninput = updateTrackVolume;
-effectVolume.oninput = updateEffectVolume;
+settingsBtn.onclick = tglSet;
+closeSettingsBtn.onclick = tglSet;
+trackVolume.oninput = (event) => {
+	if(trackControl) {
+		trackControl.changeVolume(settings.trackVolume);
+	}
+	updateVolume('trackVolume', event);
+	
+	};
+effectVolume.oninput = (event) => updateVolume('effectVolume', event);
 
-loadSettings();
-  
+
 });
 </script>
 </body>

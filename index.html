@@ -11,6 +11,7 @@
   .button-group { display: flex; justify-content: center; align-items: center; }
   button { margin: 4px; }
   .shop-item, .settings-item { display: block; text-align: center; margin: 6px; }
+  
 </style>
 </head>
 <body>
@@ -20,7 +21,15 @@
 </div>
 
 <div id='gameContainer' style='flex-direction: column; align-items: center;'>
-  <div id='enemyStats' style='text-align: center;'></div>
+  <div id='enemyStats' style='text-align: center;'>
+  <div id='enemyName'></div>
+  HP:<br>
+    <div id='enemyHpBar' style='background-color: LightGray; width: 100%; height: 1.2em; position: relative;'>
+      <div id='enemyHpProgress' style='background-color: red; width: 100%; height: 100%;'></div>
+      <span id='enemyHpText' style='position: absolute; top: 0; left: 0; width: 100%; text-align: center;'></span>
+    </div>
+    <div id='enemyAttack'></div>
+  </div>
   <br>
   <div id='message' style='text-align: center;'></div>
   <div id='combatBtns'>
@@ -28,7 +37,25 @@
     <button id='runBtn'>Run</button>
   </div>
   <br>
-  <div id='status' style='text-align: center;'></div>
+  <div id='status' style='text-align: center;'>
+  HP:<br>
+  <div id='hpBar' style='background-color: LightGray; width: 100%; height: 1.2em; position: relative;'>
+    <div id='hpProgress' style='background-color: LimeGreen; width: 100%; height: 100%;'></div>
+    <span id='hpText' style='position: absolute; top: 0; left: 0; width: 100%; text-align: center;'></span>
+  </div>
+  Level: <span id='levelText'></span><br>
+  Exp:<br>
+  <div id='expBar' style='background-color: LightGray; width: 100%; height: 1.2em; position: relative;'>
+    <div id='expProgress' style='background-color: Aqua; width: 100%; height: 100%;'></div>
+    <span id='expText' style='position: absolute; top: 0; left: 0; width: 100%; text-align: center;'></span>
+  </div>
+  Floor: <span id='floorText'></span><br>
+  Attack: <span id='attackText'></span><br>
+  Gold: <span id='goldText'></span><br>
+  Potions: <span id='potionsText'></span><br>
+  Weapon Tier: <span id='weaponTierText'></span><br>
+  Armor Tier: <span id='armorTierText'></span>
+  </div>
   <br>
   <button id='exploreBtn'>Explore</button>
   <div class='button-group'>
@@ -681,6 +708,14 @@ updateHp = (amount) => {
   plr.hp = Math.min(plr.hp + amount, pStats(plr.exp).maxHp);
 },
 
+prevMaxExp = (level) => {
+  if (level <= 1) {
+    return 0;
+  }
+  const previousLevel = level - 1;
+  return Math.floor(scale.baseMaxExp * Math.pow(scale.maxExpMulti, previousLevel - 1));
+},
+
 msg = (text, append = false) => {
 	loadStats();
 	if (!text) return;
@@ -689,7 +724,26 @@ msg = (text, append = false) => {
 
 loadStats = () => {
 	const currentPlayerStats = pStats(plr.exp);
-	status.innerHTML = `HP: ${plr.hp}/${currentPlayerStats.maxHp}<br>Level: ${currentPlayerStats.level}<br>Exp: ${plr.exp}/${currentPlayerStats.maxExp}<br>Floor: ${plr.flr}<br>Attack: ${currentPlayerStats.attack}<br>Gold: ${plr.gold}<br>Potions: ${plr.pot}<br>Weapon Tier: ${plr.wTier}<br>Armor Tier: ${plr.aTier}`;
+	const hpPercentage = (plr.hp / currentPlayerStats.maxHp) * 100;
+	
+	const expRequiredForPreviousLevel = prevMaxExp(currentPlayerStats.level);
+    const expPercentage = ((plr.exp - expRequiredForPreviousLevel) / (currentPlayerStats.maxExp - expRequiredForPreviousLevel)) * 100;
+	
+	el('hpText').textContent = `${plr.hp}/${currentPlayerStats.maxHp}`;
+	el('hpProgress').style.width = `${hpPercentage}%`;
+	el('hpProgress').style.backgroundColor = hpPercentage > 30 ? 'LimeGreen' : hpPercentage > 10 ? 'yellow' : 'red';
+	
+	el('levelText').textContent = currentPlayerStats.level;
+	el('expText').textContent = `${plr.exp}/${currentPlayerStats.maxExp}`;
+	el('expProgress').style.width = `${expPercentage}%`;
+	
+	el('floorText').textContent = plr.flr;
+	el('attackText').textContent = currentPlayerStats.attack;
+	el('goldText').textContent = plr.gold;
+	el('potionsText').textContent = plr.pot;
+	el('weaponTierText').textContent = plr.wTier;
+	el('armorTierText').textContent = plr.aTier;
+	
 	updBossBtn();
 },
 
@@ -701,16 +755,13 @@ death = () => {
 		plr.exp = 0;
 	} else {
 		const newLevel = Math.max(playerStatsBeforeDeath.level - 1, 1);
-		let previousLevelStats = pStats(plr.exp - 1);
-		while (previousLevelStats.level >= newLevel) {
-			plr.exp--;
-			previousLevelStats = pStats(plr.exp - 1);
-		}
-    }
-    plr.flr = Math.max(plr.flr - 1, 1);
-    plr.hp = pStats(plr.exp).maxHp;
-	
-    genEnemies();
+		const previousLevelMinExp = prevMaxExp(newLevel);
+		plr.exp = previousLevelMinExp;
+	}
+	plr.flr = Math.max(plr.flr - 1, 1);
+	plr.hp = pStats(plr.exp).maxHp;
+
+	genEnemies();
 	plr.fndB = false;
 	plr.deadB = false;
 	saveGame();
@@ -846,7 +897,16 @@ randEnemy = (difficulty) => {
 },
 
 updateEnemyStats = (enemy) => {
-	enemy ? (enemyStats.innerHTML = `${enemy.name}<br>HP: ${enemy.hp}<br>Attack: ${enemy.attack}<br>`, enemyStats.style.display = 'block') : (enemyStats.innerHTML = '', enemyStats.style.display = 'none');
+	if (enemy) {
+		el('enemyName').textContent = enemy.name;
+		const enemyHpPercentage = (enemy.hp / enemy.maxHp) * 100;
+		el('enemyHpText').textContent = `${enemy.hp}/${enemy.maxHp}`;
+		el('enemyHpProgress').style.width = `${enemyHpPercentage}%`;
+		el('enemyAttack').innerHTML = `Attack: ${enemy.attack}`;
+		enemyStats.style.display = 'block';
+	} else {
+		enemyStats.style.display = 'none';
+	}
 },
 
 genEnemies = tryCatch(function() {
@@ -993,7 +1053,7 @@ buyItem = tryCatch(function(itemType) {
 		msg(`You upgraded your weapon to Tier ${plr.wTier}.`);
 	} else {
 		plr.aTier++;
-		plr.hp += scale.aBonus;
+		updateHp(scale.aBonus);
 		msg(`You upgraded your armor to Tier ${plr.aTier}.`);
 	}
 	updCost();

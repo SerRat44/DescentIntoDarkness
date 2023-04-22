@@ -8,10 +8,12 @@
   body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 4px; overflow-y: auto; background-color: #f2f2f2; }
   #message { min-height: 7em; display: flex; flex-direction: column; justify-content: flex-start; overflow: auto; }
   #gameContainer, #shop, #settingsMenu, #combatBtns, #fileInput { display: none; }
+  #shop, #settingsMenu {  text-align: center; justify-content: center; align-items: center; }
   .button-group { display: flex; justify-content: center; align-items: center; }
-  button { margin: 4px; }
-  .shop-item, .settings-item { display: block; text-align: center; margin: 6px; }
-  
+  button { margin: 4px; white-space: nowrap; }
+  button:not([disabled]):hover { background-color: #ddd; cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  .settings-item, .shop-item { display: block; text-align: center; margin: 6px; }
 </style>
 </head>
 <body>
@@ -77,33 +79,34 @@
   <input type='file' id='fileInput' accept='.save' style='display: none;' onchange='importSave(event);' />
 </div>
 
-<div id='shop' style='text-align: center;'>
-  <h3>Shop</h3>
-  <div class='button-group'>
-    <div class='shop-item'>
-      <button id='buyPotionBtn'>Buy Potion</button>
-      <div id='potionCost'></div>
-    </div>
-    <div class='shop-item'>
-      <button id='buyMaxPotionsBtn'>Max Potions</button>
-      <div id='maxPotionCost'></div>
-    </div>
+  <div id='shop'>
+    <h3>Shop</h3>
+	<div class='button-group'>
+      <div class='shop-item'>
+        <button id='buyPotionBtn'>Buy Potion</button>
+        <div id='potionCost'></div>
+      </div>
+	  <div class='shop-item'>
+        <button id='buyMaxPotionsBtn'>Max Potions</button>
+        <div id='maxPotionCost'></div>
+      </div>
+	</div>
+	  
+    <div class='button-group'>
+	  <div class='shop-item'>
+        <button id='buyWeaponBtn'>Buy Weapon</button>
+        <div id='weaponCost'></div>
+      </div>
+      <div class='shop-item'>
+        <button id='buyArmorBtn'>Buy Armor</button>
+        <div id='armorCost'></div>
+      </div>
+	</div>
+    <br>
+    <button id='closeShopBtn'>Close Shop</button>
   </div>
-  <div class='button-group'>
-    <div class='shop-item'>
-      <button id='buyWeaponBtn'>Buy Weapon</button>
-      <div id='weaponCost'></div>
-    </div>
-    <div class='shop-item'>
-      <button id='buyArmorBtn'>Buy Armor</button>
-      <div id='armorCost'></div>
-    </div>
-  </div>
-  <br>
-  <button id='closeShopBtn'>Close Shop</button>
-</div>
 
-<div id='settingsMenu' style='text-align: center;'>
+<div id='settingsMenu'>
   <h3>Settings</h3>
   <div class='settings-item'>
     <label for='trackVolume'>Soundtrack Volume:</label>
@@ -603,7 +606,7 @@ levelUp: [
   { name: 'Necromancer Acolyte', difficulty: 'easy', maxHp: 25, attack: 7, gold: 8, exp: 4 },
   { name: 'Wyvern Hatchling', difficulty: 'easy', maxHp: 19, attack: 6, gold: 5, exp: 3 },
   { name: 'Imp', difficulty: 'medium', maxHp: 35, attack: 13, gold: 11, exp: 6 },
-  { name: 'Wendigo', difficulty: 'medium', maxHp: 47, attack: 17, gold: 18, exp: 9 },
+  { name: 'Wendigo', difficulty: 'medium', maxHp: 42, attack: 17, gold: 18, exp: 9 },
 { name: 'Kelpie', difficulty: 'medium', maxHp: 36, attack: 11, gold: 10, exp: 6 },
   { name: 'Dryad', difficulty: 'medium', maxHp: 37, attack: 12, gold: 11, exp: 6 },
 { name: 'Phantom', difficulty: 'medium', maxHp: 40, attack: 14, gold: 13, exp: 8 },
@@ -614,7 +617,7 @@ levelUp: [
 { name: 'Wererat', difficulty: 'medium', maxHp: 33, attack: 11, gold: 12, exp: 6 },
 { name: 'Ice Wraith', difficulty: 'medium', maxHp: 39, attack: 13, gold: 15, exp: 8 },
 { name: 'Succubus', difficulty: 'medium', maxHp: 37, attack: 12, gold: 14, exp: 7 },
-{ name: 'Troll', difficulty: 'medium', maxHp: 44, attack: 18, gold: 18, exp: 10 },
+{ name: 'Troll', difficulty: 'medium', maxHp: 44, attack: 16, gold: 16, exp: 10 },
 { name: 'Treant', difficulty: 'medium', maxHp: 38, attack: 14, gold: 14, exp: 7 },
 { name: 'Giant Spider', difficulty: 'medium', maxHp: 39, attack: 14, gold: 13, exp: 7 },
 { name: 'Centaur', difficulty: 'medium', maxHp: 41, attack: 16, gold: 16, exp: 9 },
@@ -1073,7 +1076,7 @@ buyPots = tryCatch(function(max = false) {
 	} else {
 		msg(`You don't have enough gold to buy any potions.`);
 	}
-}),
+});
 
 
 
@@ -1081,8 +1084,8 @@ buyPots = tryCatch(function(max = false) {
 
 
 
-
-sLS = (k, d) => {localStorage.setItem(k, btoa(JSON.stringify(d)));}, // saveToLocalStorage
+//start of player save/load
+const sLS = (k, d) => {localStorage.setItem(k, btoa(JSON.stringify(d)));}, // saveToLocalStorage
 lLS = (k) => {const d = localStorage.getItem(k); return d ? JSON.parse(atob(d)) : null;}, // loadFromLocalStorage
 
 saveGame = tryCatch((auto = true) => {
@@ -1100,26 +1103,30 @@ exportSave = tryCatch(() => {
   if (sd) {const a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,' + btoa(JSON.stringify(sd)); a.download = 'descentIntoDarkness.save'; a.style.display = 'none'; document.body.appendChild(a); a.click(); document.body.removeChild(a); msg('Save file exported successfully!');} else {msg('No saved game data found.');}
 }),
 
-importSave = tryCatch(e => {
-  const f = e.target.files[0]; // file
+importSave = tryCatch((event) => {
+  const f = event.target.files[0];
   if (f) {
-    const r = new FileReader(); // reader
-    r.onload = e => {
-      try {const lp = JSON.parse(atob(e.target.result)); sLS('SerRat&ChatGPTsEndlessTextBasedRPG.save', valPlrData(lp)); loadGame(); msg('Save file imported successfully!');} catch (err) {handleError(err);}
+    const reader = new FileReader();
+    reader.onload = event => {
+		const lp = JSON.parse(atob(event.target.result));
+		sLS('SerRat&ChatGPTsEndlessTextBasedRPG.save', valPlrData(lp));
+		loadGame();
+		msg('Save file imported successfully!');
     };
-    r.readAsText(f);
+    reader.readAsText(f);
   }
 }),
 
 triggerFileInput = () => {fileInput.click();},
 
-resetSaveData = () => {
+resetSaveData = tryCatch(() => {
   if (confirm('Are you sure you want to reset your save data? This action cannot be undone.')) {
 	tglSet(); localStorage.removeItem('SerRat&ChatGPTsEndlessTextBasedRPG.save');
 	msg('Save data reset successfully.');
+	trackControl.stop();
 	startGame();
   }
-},
+}),
  
 valPlrData = (playerData) => {
   const defaultPlayer = plr;
@@ -1163,6 +1170,7 @@ valPlrData = (playerData) => {
 
   return filteredPlayerData;
 };
+//end of player save/load
 
 // seed functions
 function sfc32(a, b, c, d) {
@@ -1251,7 +1259,6 @@ function chooseRandomScale(currentScale) {
 function modulate(key, scale) {
     choose([
         function() {
-            // Move to a random scale that isn't the current one
             scale = chooseRandomScale(scale);
         },
         function() {
@@ -2012,11 +2019,11 @@ function Audio(ctx) {
 }
 //end of audio
 
+//start of settings
 let settings = {
     trackVolume: 0.5,
 	effectVolume: 0.5
 };
-
 
 function tglSet() {
   const isSettingsOpen = settingsMenu.style.display === 'block';
@@ -2030,7 +2037,6 @@ function updateVolume(volumeType, volume) {
   updateSliderValues();
   saveSettings();
 }
-
 
 function setSliderPositions() {
   trackVolume.value = settings.trackVolume * 100;
@@ -2054,6 +2060,7 @@ function loadSettings() {
   setSliderPositions();
   updateSliderValues();
 }
+//end of settings
 
 function startGame() {
 	titleScreen.style.display = 'none';
@@ -2061,6 +2068,7 @@ function startGame() {
 	loadSettings();
 	trackControl = genTrack();
 	trackControl.changeVolume(settings.trackVolume);
+	
 	if (localStorage.getItem('SerRat&ChatGPTsEndlessTextBasedRPG.save') != null) {
 		loadGame();
 		updBossBtn();
@@ -2098,12 +2106,11 @@ resetSaveBtn.onclick = resetSaveData;
 settingsBtn.onclick = tglSet;
 closeSettingsBtn.onclick = tglSet;
 trackVolume.oninput = (event) => {
+	updateVolume('trackVolume', event);
 	if(trackControl) {
 		trackControl.changeVolume(settings.trackVolume);
 	}
-	updateVolume('trackVolume', event);
-	
-	};
+};
 effectVolume.oninput = (event) => updateVolume('effectVolume', event);
 
 

@@ -66,6 +66,6 @@ function decompressAndLoadResource(resourceType, filePath, decompressor) {
 	await decompressAndLoadResource('html', './main.html.br', arrayBuffer => BrotliDecode(arrayBuffer));
 	console.log("loaded main.html.br");
 	
-    await decompressAndLoadResource('js', './main.min.js.br', arrayBuffer => BrotliDecode(arrayBuffer));
-	console.log("loaded main.min.js.br");
+    await decompressAndLoadResource('js', './main.js.br', arrayBuffer => BrotliDecode(arrayBuffer));
+	console.log("loaded main.js.br");
 })();

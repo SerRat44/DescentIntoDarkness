@@ -3,7 +3,7 @@ const path = require('path');
 const brotli = require('brotli');
 
 function compressFile(filePath) {
-  if (path.extname(filePath) === '.br' || path.basename(filePath) === 'index.html' || path.basename(filePath) === 'indexLoader.min.js') {
+  if (path.extname(filePath) === '.br' || path.basename(filePath) === 'index.html' || path.basename(filePath) === 'indexLoader.js') {
     return;
   }
 

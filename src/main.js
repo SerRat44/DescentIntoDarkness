@@ -545,17 +545,17 @@ _BASE_BONE_INCOME: 5, _BASE_SKULL_INCOME: 1,
 
 };
 
-const createEnemyStats = () => {
+const createEnemyLegends = () => {
     const enemyStats = {};
 
     for (const enemy of gameData._ENEMIES) {
         enemyStats[enemy.name] = {
-			_FIGHTS: 0,
-            _DAMAGE_DEALT: 0,
-            _DAMAGE_TAKEN_FROM: 0,
-            _TOTAL_KILLED: 0,
-            _DEATHS_BY: 0,
-            _RUN_ATTEMPTS: 0,
+            _FIGHTS: { _NAME: "Fights:", _VALUE: 0 },
+            _DAMAGE_DEALT: { _NAME: "Damage Dealt:", _VALUE: 0 },
+            _DAMAGE_TAKEN_FROM: { _NAME: "Damage Taken From:", _VALUE: 0 },
+            _TOTAL_KILLED: { _NAME: "Total Killed:", _VALUE: 0 },
+            _DEATHS_BY: { _NAME: "Deaths By:", _VALUE: 0 },
+            _RUN_ATTEMPTS: { _NAME: "Run Attempts:", _VALUE: 0 },
         };
     }
 
@@ -563,36 +563,31 @@ const createEnemyStats = () => {
 };
 
 const legendsTemplate = {
-    _TOTAL_FLOORS_CLIMBED: 0,
-    _TOTAL_LEVELS_GAINED: 0,
-    _TOTAL_EXP_GAINED: 0,
-    _TOTAL_GOLD_GAINED: 0,
-    _TOTAL_BONES_GAINED: 0,
-    _TOTAL_SKULLS_GAINED: 0,
-    
-    _HEALED_USING_POTIONS: 0,
-    _HEALED_USING_SHRINES: 0,
-    _HEALED_LEVELING: 0,
-    
-    _PLAYER_DEATHS: 0,
-    _LEVELS_LOST: 0,
-    _EXP_LOST: 0,
-    _PLAYER_DAMAGE_TAKEN: 0,
-    
-    _FLOOR_BOSS_FIGHTS: 0,
-    _FLOOR_BOSS_DAMAGE_DEALT: 0,
-    _FLOOR_BOSS_DAMAGE_TAKEN_FROM: 0,
-    _FLOOR_BOSS_KILLED: 0,
-    _FLOOR_BOSS_DEATHS_BY: 0,
-    _FLOOR_BOSS_RUN_ATTEMPTS: 0,
-    
-    _ENEMY_FIGHTS: 0,
-    _ENEMY_DAMAGE_DEALT: 0,
-    _ENEMY_DAMAGE_TAKEN_FROM: 0,
-    _TOTAL_ENEMIES_KILLED: 0,
-    _ENEMY_RUN_ATTEMPTS: 0,
-    
-    _ENEMIES: createEnemyStats(),
+    _TOTAL_FLOORS_CLIMBED: { _NAME: "Total Floors Climbed:", _VALUE: 0 },
+    _TOTAL_LEVELS_GAINED: { _NAME: "Total Levels Gained:", _VALUE: 0 },
+    _TOTAL_EXP_GAINED: { _NAME: "Total EXP Gained:", _VALUE: 0 },
+    _TOTAL_GOLD_GAINED: { _NAME: "Total Gold Gained:", _VALUE: 0 },
+    _TOTAL_BONES_GAINED: { _NAME: "Total Bones Gained:", _VALUE: 0 },
+    _TOTAL_SKULLS_GAINED: { _NAME: "Total Skulls Gained:", _VALUE: 0 },
+    _HEALED_USING_POTIONS: { _NAME: "Healed Using Potions:", _VALUE: 0 },
+    _HEALED_USING_SHRINES: { _NAME: "Healed Using Shrines:", _VALUE: 0 },
+    _HEALED_LEVELING: { _NAME: "Healed Leveling:", _VALUE: 0 },
+    _PLAYER_DEATHS: { _NAME: "Player Deaths:", _VALUE: 0 },
+    _LEVELS_LOST: { _NAME: "Levels Lost:", _VALUE: 0 },
+    _EXP_LOST: { _NAME: "EXP Lost:", _VALUE: 0 },
+    _PLAYER_DAMAGE_TAKEN: { _NAME: "Player Damage Taken:", _VALUE: 0 },
+    _FLOOR_BOSS_FIGHTS: { _NAME: "Floor Boss Fights:", _VALUE: 0 },
+    _FLOOR_BOSS_DAMAGE_DEALT: { _NAME: "Floor Boss Damage Dealt:", _VALUE: 0 },
+    _FLOOR_BOSS_DAMAGE_TAKEN_FROM: { _NAME: "Floor Boss Damage Taken From:", _VALUE: 0 },
+    _FLOOR_BOSS_KILLED: { _NAME: "Floor Boss Killed:", _VALUE: 0 },
+    _FLOOR_BOSS_DEATHS_BY: { _NAME: "Floor Boss Deaths By:", _VALUE: 0 },
+    _FLOOR_BOSS_RUN_ATTEMPTS: { _NAME: "Floor Boss Run Attempts:", _VALUE: 0 },
+    _ENEMY_FIGHTS: { _NAME: "Enemy Fights:", _VALUE: 0 },
+    _ENEMY_DAMAGE_DEALT: { _NAME: "Enemy Damage Dealt:", _VALUE: 0 },
+    _ENEMY_DAMAGE_TAKEN_FROM: { _NAME: "Enemy Damage Taken From:", _VALUE: 0 },
+   _TOTAL_ENEMIES_KILLED: { _NAME: "Total Enemies Killed:", _VALUE: 0 },
+    _ENEMY_RUN_ATTEMPTS: { _NAME: "Enemy Run Attempts:", _VALUE: 0 },
+    _ENEMIES: createEnemyLegends(),
 };
 
 const defaultPlayerData = {
@@ -1112,24 +1107,30 @@ function altarClaim() {
 
 
 
+
 function toggleLegendsMenu() {
-  const isLegendsMenuOpen = legendsMenu.style.display === 'block';
-  legendsMenu.style.display = isLegendsMenuOpen ? 'none' : 'block';
-  altarMenu.style.display = isLegendsMenuOpen ? 'block' : 'none';
-  
-  
-  
-  
-  
-  
-  
-  legendsText.innerHTML = legendsTemplate;
-  
-  
-  
-  
-  console.log(legendsTemplate);
+    const isLegendsMenuOpen = legendsMenu.style.display === 'block';
+    legendsMenu.style.display = isLegendsMenuOpen ? 'none' : 'block';
+    altarMenu.style.display = isLegendsMenuOpen ? 'block' : 'none';
+
+    if (!isLegendsMenuOpen) {
+        legendsText.innerHTML = generateLegendsHTML(playerData.legends);
+    }
 }
+
+
+
+function generateLegendsHTML(legends) {
+    let html = '';
+    for (const [name, value] of Object.entries(legends)) {
+        html += `<div class="legend-item">
+                    <span class="legend-name">${name}</span>
+                    <span class="legend-value">${value}</span>
+                 </div>`;
+    }
+    return html;
+}
+
 //end of legends
 
 

@@ -12,3 +12,17 @@ button:disabled { cursor: not-allowed; }
 #expProgress { background-color: Aqua; width: 100%; height: 100%; }
 #enemyHpText, #hpText, #expText { position: absolute; top: 0; left: 0; width: 100%; text-align: center; }
 #enemyStats, #message, #status { text-align: center; }
+
+.legend-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 1em 20%;
+}
+
+.legend-name {
+    text-align: left;
+}
+
+.legend-value {
+    text-align: right;
+}

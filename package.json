@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "clean": "del-cli dist/**/*",
+    "minify-js": "terser src/main.js --config-file terser.conf -o ./dist/main.min.js",
+    "minify-js-2": "terser src/indexLoader.js --config-file terser.conf -o ./dist/indexLoader.min.js",
+    "minify-html": "html-minifier --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --use-short-doctype --minify-css true --minify-js true -o ./dist/main.html ./src/main.html",
+    "minify-html-2": "html-minifier --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --use-short-doctype --minify-css true --minify-js true -o ./dist/index.html ./src/index.html",
+    "minify-css": "postcss src/*.css -d ./dist",
+    "brotli": "node brotliScript.js",
+    "dev": "run-s clean minify-js minify-js-2 minify-html minify-html-2 minify-css",
+    "build": "run-s dev brotli"
+  },
+  "devDependencies": {
+    "brotli": "^1.3.3",
+    "cssnano": "^6.0.1",
+    "del-cli": "^5.0.0",
+    "html-minifier": "^4.0.0",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.24",
+    "postcss-cli": "^10.1.0",
+    "terser": "^5.18.0"
+  }
+}

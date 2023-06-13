@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gzip Compressor</title>
+<style>
+  body { font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 4px; overflow-y: auto; background-color: #f2f2f2; }
+  button, a { margin: 8px; }
+  p.stats { margin: 2px; }
+  a.download-link { background-color: #008CBA; color: white; padding: 8px 16px; text-decoration: none; display: inline-block; }
+  #file-stats { display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+<h1>Batch Gzip Compressor</h1>
+<input type="file" id="file-input" multiple>
+<br>
+<button id="gzip-button">Gzip</button>
+<p class="stats" id="original-size">Original Size: 0 bytes</p>
+<p class="stats" id="gzip-size">Gzip Size: 0 bytes</p>
+<p class="stats" id="percentage-difference">Difference: 0.00%</p>
+<div id="file-stats"></div>
+
+<script src="./gzip.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const fileInput = document.getElementById("file-input");
+    const gzipButton = document.getElementById("gzip-button");
+    const originalSize = document.getElementById("original-size");
+    const gzipSize = document.getElementById("gzip-size");
+    const percentageDifference = document.getElementById("percentage-difference");
+    const fileStats = document.getElementById("file-stats");
+
+    gzipButton.addEventListener("click", async () => {
+      const files = fileInput.files;
+
+      if (!files.length) {
+        alert("Please select a file.");
+        return;
+      }
+
+      fileStats.innerHTML = '';
+
+      let originalTotalSize = 0;
+      let gzipTotalSize = 0;
+
+      const filePromises = Array.from(files).map((file, index) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        const downloadLink = document.createElement("a");
+
+        downloadLink.classList.add("download-link");
+        downloadLink.textContent = "Loading...";
+        downloadLink.style.display = 'inline-block';
+        fileStats.appendChild(downloadLink);
+
+        reader.onload = function(e) {
+          const data = e.target.result;
+          const textBytes = new TextEncoder("utf-8").encode(data);
+          const gzip = new Zlib.Gzip(textBytes);
+          const compressed = gzip.compress();
+
+          originalTotalSize += data.length;
+          gzipTotalSize += compressed.length;
+
+          const percentageReduction = ((1 - compressed.length / data.length) * 100).toFixed(2);
+          const blob = new Blob([compressed], {type: 'application/gzip'});
+          const url = URL.createObjectURL(blob);
+
+          downloadLink.href = url;
+          downloadLink.download = `${file.name}.gz`;
+          downloadLink.textContent = `${file.name}.gz: ${percentageReduction}% smaller`;
+
+          resolve();
+        };
+
+        reader.onerror = function(e) {
+          reject(e);
+        };
+        
+        reader.readAsText(file);
+      }));
+
+      // Wait for all files to be read and compressed
+      await Promise.all(filePromises);
+
+      originalSize.textContent = `Original Size: ${originalTotalSize} bytes`;
+      gzipSize.textContent = `Gzip Size: ${gzipTotalSize} bytes`;
+      percentageDifference.textContent = `Difference: ${((1 - gzipTotalSize / originalTotalSize) * 100).toFixed(2)}%`;
+    });
+  });
+</script>
+
+</body>
+</html>

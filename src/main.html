@@ -1,0 +1,131 @@
+<div id='gameContainer' style='flex-direction: column; align-items: center;'>
+<div id='enemyStats'>
+<div id='enemyName'></div>
+HP:<br>
+<div id='enemyHpBar'>
+<div id='enemyHpProgress'></div>
+<span id='enemyHpText'></span>
+</div>
+<div id='enemyAttack'></div>
+</div>
+<br>
+<div id='message'></div>
+<div id='combatBtns'>
+<button id='fightBtn'>Fight</button>
+<button id='runBtn'>Run</button>
+</div>
+<br>
+<div id='status'>
+HP:<br>
+<div id='hpBar'>
+<div id='hpProgress'></div>
+<span id='hpText'></span>
+</div>
+Level: <span id='levelText'></span><br>
+Exp:<br>
+<div id='expBar'>
+<div id='expProgress'></div>
+<span id='expText'></span>
+</div>
+Floor: <span id='floorText'></span><br>
+Attack: <span id='attackText'></span><br>
+Gold: <span id='goldText'></span><br>
+Potions: <span id='potionsText'></span><br>
+Weapon Tier: <span id='weaponTierText'></span><br>
+Armor Tier: <span id='armorTierText'></span>
+</div>
+<br>
+<button id='exploreBtn'>Explore</button>
+<div class='button-group'>
+<button id='usePotBtn'>Use Potion</button>
+<button id='maxPotionsBtn'>Max Potions</button>
+</div>
+<button id='fightBossBtn' disabled>Fight Boss</button>
+<button id='shopBtn'>Visit Shop</button>
+<button id='altarBtn'>Visit Altar</button>
+<br>
+<button id='settingsBtn'>Settings</button>
+<div class='button-group'>
+<button id='saveBtn'>Save Game</button>
+<button id='loadBtn'>Load Game</button>
+</div>
+<div class='button-group'>
+<button id='exportBtn'>Export Save</button>
+<button id='importBtn'>Import Save</button>
+</div>
+<input type='file' id='fileInput' accept='.save' style='display: none;' onchange='importSave(event);' />
+</div>
+
+<div id='shop'>
+<h3>Shop</h3>
+<div class='button-group'>
+<div class='shop-item'>
+<button id='buyPotionBtn'>Buy Potion</button>
+<div id='potionCost'></div>
+</div>
+<div class='shop-item'>
+<button id='buyMaxPotionsBtn'>Max Potions</button>
+<div id='maxPotionCost'></div>
+</div>
+</div>
+<div class='button-group'>
+<div class='shop-item'>
+<button id='buyWeaponBtn'>Buy Weapon</button>
+<div id='weaponCost'></div>
+</div>
+<div class='shop-item'>
+<button id='buyArmorBtn'>Buy Armor</button>
+<div id='armorCost'></div>
+</div>
+</div>
+<br>
+<button id='closeShopBtn'>Close Shop</button>
+</div>
+
+<div id='altarMenu'>
+<h3>Altar</h3>
+<div id='bonesDisplay'>Bones: <span id='bonesText'></span></div>
+<div id='skullsDisplay'>Skulls: <span id='skullsText'></span></div>
+<br>
+<div id='unclaimedBones'>Unclaimed Bones: <span id='unclaimedBonesText'></span></div>
+<div id='unclaimedSkulls'>Unclaimed Skulls: <span id='unclaimedSkullsText'></span></div>
+<span id='timerText'></span>
+<br>
+<br>
+<button id='claimBonesBtn'>Claim</button>
+<br>
+<br>
+<button id='legendsBtn'>Legends</button>
+<br>
+<br>
+<button id='closeAltarBtn'>Close Altar</button>
+</div>
+
+<div id='legendsMenu'>
+<h3>Legends</h3>
+<button id='closeLegendsBtn'>Close Legends</button>
+<br>
+<span id='legendsText'></span>
+
+</div>
+
+<div id='settingsMenu'>
+<h3>Settings</h3>
+<div class='settings-item'>
+<label for='trackVolume'>Soundtrack Volume:</label>
+<span id='trackVolumeValue'></span>
+<br>
+<input type='range' id='trackVolume' min='0' max='100' value='50'>
+</div>
+<div class='settings-item'>
+<label for='effectVolume'>Sound Effect Volume:</label>
+<span id='effectVolumeValue'></span>
+<br>
+<input type='range' id='effectVolume' min='0' max='100' value='50'>
+</div>
+<br>
+<button id='resetSaveBtn'>Reset Save Data</button>
+<br>
+<br>
+<button id='closeSettingsBtn'>Close Settings</button>
+</div>

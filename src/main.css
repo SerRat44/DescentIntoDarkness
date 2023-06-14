@@ -16,13 +16,39 @@ button:disabled { cursor: not-allowed; }
 .legend-item {
     display: flex;
     justify-content: space-between;
-    margin: 1em 20%;
+    margin: 0.2em 1%;
 }
 
 .legend-name {
     text-align: left;
+    margin-right: 1em;
 }
 
 .legend-value {
     text-align: right;
+    margin-left: 1em;
+}
+
+.legend-title {
+    margin: 1em;
+	font-size: 1.2em;
+}
+
+.upgrade-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+	white-space: nowrap;
+    margin: 0.4em;
+}
+
+.upgrade-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0.1em 10%;
+}
+.upgrade-name {
+	font-size: 1.1em;
 }

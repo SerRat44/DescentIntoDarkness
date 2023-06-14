@@ -29,6 +29,7 @@ const unclaimedBonesText = el('unclaimedBonesText');
 const unclaimedSkullsText = el('unclaimedSkullsText');
 const claimBonesBtn = el('claimBonesBtn');
 const timerText = el('timerText');
+const upgradeMenu = el('upgradeMenu');
 
 const legendsBtn = el('legendsBtn');
 const legendsMenu = el('legendsMenu');
@@ -550,12 +551,12 @@ const createEnemyLegends = () => {
 
     for (const enemy of gameData._ENEMIES) {
         enemyStats[enemy.name] = {
-            _FIGHTS: { _NAME: "Fights:", _VALUE: 0 },
-            _DAMAGE_DEALT: { _NAME: "Damage Dealt:", _VALUE: 0 },
-            _DAMAGE_TAKEN_FROM: { _NAME: "Damage Taken From:", _VALUE: 0 },
-            _TOTAL_KILLED: { _NAME: "Total Killed:", _VALUE: 0 },
-            _DEATHS_BY: { _NAME: "Deaths By:", _VALUE: 0 },
-            _RUN_ATTEMPTS: { _NAME: "Run Attempts:", _VALUE: 0 },
+            _FIGHTS: { name: "Fights:", value: 0 },
+			_DAMAGE_DEALT: { name: "Damage Dealt To:", value: 0 },
+			_DAMAGE_TAKEN_FROM: { name: "Damage Taken From:", value: 0 },
+			_KILLED: { name: "Killed:", value: 0 },
+			_DEATHS_FROM: { name: "Deaths From:", value: 0 },
+			_RUN_ATTEMPTS: { name: "Run Attempts:", value: 0 },
         };
     }
 
@@ -563,31 +564,39 @@ const createEnemyLegends = () => {
 };
 
 const legendsTemplate = {
-    _TOTAL_FLOORS_CLIMBED: { _NAME: "Total Floors Climbed:", _VALUE: 0 },
-    _TOTAL_LEVELS_GAINED: { _NAME: "Total Levels Gained:", _VALUE: 0 },
-    _TOTAL_EXP_GAINED: { _NAME: "Total EXP Gained:", _VALUE: 0 },
-    _TOTAL_GOLD_GAINED: { _NAME: "Total Gold Gained:", _VALUE: 0 },
-    _TOTAL_BONES_GAINED: { _NAME: "Total Bones Gained:", _VALUE: 0 },
-    _TOTAL_SKULLS_GAINED: { _NAME: "Total Skulls Gained:", _VALUE: 0 },
-    _HEALED_USING_POTIONS: { _NAME: "Healed Using Potions:", _VALUE: 0 },
-    _HEALED_USING_SHRINES: { _NAME: "Healed Using Shrines:", _VALUE: 0 },
-    _HEALED_LEVELING: { _NAME: "Healed Leveling:", _VALUE: 0 },
-    _PLAYER_DEATHS: { _NAME: "Player Deaths:", _VALUE: 0 },
-    _LEVELS_LOST: { _NAME: "Levels Lost:", _VALUE: 0 },
-    _EXP_LOST: { _NAME: "EXP Lost:", _VALUE: 0 },
-    _PLAYER_DAMAGE_TAKEN: { _NAME: "Player Damage Taken:", _VALUE: 0 },
-    _FLOOR_BOSS_FIGHTS: { _NAME: "Floor Boss Fights:", _VALUE: 0 },
-    _FLOOR_BOSS_DAMAGE_DEALT: { _NAME: "Floor Boss Damage Dealt:", _VALUE: 0 },
-    _FLOOR_BOSS_DAMAGE_TAKEN_FROM: { _NAME: "Floor Boss Damage Taken From:", _VALUE: 0 },
-    _FLOOR_BOSS_KILLED: { _NAME: "Floor Boss Killed:", _VALUE: 0 },
-    _FLOOR_BOSS_DEATHS_BY: { _NAME: "Floor Boss Deaths By:", _VALUE: 0 },
-    _FLOOR_BOSS_RUN_ATTEMPTS: { _NAME: "Floor Boss Run Attempts:", _VALUE: 0 },
-    _ENEMY_FIGHTS: { _NAME: "Enemy Fights:", _VALUE: 0 },
-    _ENEMY_DAMAGE_DEALT: { _NAME: "Enemy Damage Dealt:", _VALUE: 0 },
-    _ENEMY_DAMAGE_TAKEN_FROM: { _NAME: "Enemy Damage Taken From:", _VALUE: 0 },
-   _TOTAL_ENEMIES_KILLED: { _NAME: "Total Enemies Killed:", _VALUE: 0 },
-    _ENEMY_RUN_ATTEMPTS: { _NAME: "Enemy Run Attempts:", _VALUE: 0 },
-    _ENEMIES: createEnemyLegends(),
+    "player Stats": {
+		_TOTAL_EXPLORED: { name: "Amount Explored", value: 0 },
+		_TOTAL_NOTHING_FOUND: { name: "Nothing Found:", value: 0 },
+		_TOTAL_SHRINES_FOUND: { name: "Shrines Found:", value: 0 },
+        _TOTAL_FLOORS_CLIMBED: { name: "Floors Climbed:", value: 0 },
+        _TOTAL_LEVELS_GAINED: { name: "Levels Gained:", value: 0 },
+        _TOTAL_EXP_GAINED: { name: "EXP Gained:", value: 0 },
+        _TOTAL_GOLD_GAINED: { name: "Gold Gained:", value: 0 },
+        _TOTAL_BONES_GAINED: { name: "Bones Gained:", value: 0 },
+        _TOTAL_SKULLS_GAINED: { name: "Skulls Gained:", value: 0 },
+        _TOTAL_HEALED: { name: "Health Restored:", value: 0 },
+		_TOTAL_POTIONS_USED: { name: "Potions Used:", value: 0 },
+        _PLAYER_DEATHS: { name: "Deaths:", value: 0 },
+        _LEVELS_LOST: { name: "Levels Lost:", value: 0 },
+        _EXP_LOST: { name: "EXP Lost:", value: 0 },
+    },
+    "Floor Boss Stats": {
+        _FLOOR_BOSS_FIGHTS: { name: "Fights:", value: 0 },
+        _FLOOR_BOSS_DAMAGE_DEALT: { name: "Damage Dealt To:", value: 0 },
+        _FLOOR_BOSS_DAMAGE_TAKEN_FROM: { name: "Damage Taken From:", value: 0 },
+        _FLOOR_BOSS_KILLED: { name: "Killed:", value: 0 },
+        _FLOOR_BOSS_DEATHS_FROM: { name: "Deaths From:", value: 0 },
+        _FLOOR_BOSS_RUN_ATTEMPTS: { name: "Run Attempts:", value: 0 },
+    },
+    "Overall Enemy Stats": {
+        _ENEMY_FIGHTS: { name: "Fights:", value: 0 },
+        _ENEMY_DAMAGE_DEALT: { name: "Damage Dealt To:", value: 0 },
+        _ENEMY_DAMAGE_TAKEN_FROM: { name: "Damage Taken From:", value: 0 },
+        _TOTAL_ENEMIES_KILLED: { name: "Enemies Killed:", value: 0 },
+		_TOTAL_DEATHS_FROM: { name: "Deaths From:", value: 0 },
+        _ENEMY_RUN_ATTEMPTS: { name: "Run Attempts:", value: 0 },
+    },
+	"Individual Enemy Stats": createEnemyLegends()
 };
 
 const defaultPlayerData = {
@@ -612,7 +621,11 @@ const defaultPlayerData = {
     timer: 0,
 	lastTime: new Date().getTime(),
 
-    bIncome: 1,
+    Collecting: 1,
+	Alchemy: 0,
+    Armorer: 0,
+    Wisdom: 0,
+    Greed: 0,
 	
 	legends: legendsTemplate,
   };
@@ -647,166 +660,230 @@ return (Math.random() * (maxDamage - minDamage + 1) + minDamage) | 0;
 
 // Player module
 const player = {
-_calculateStats(exp) {
-let level = 1,
-totalExp = gameData._BALANCE._BASE_MAX_EXP,
-expRequiredForNextLevel = totalExp;
+    _calculateStats(exp) {
+        let level = 1,
+        totalExp = gameData._BALANCE._BASE_MAX_EXP,
+        expRequiredForNextLevel = totalExp;
 
-while(exp >= expRequiredForNextLevel) {
-level++;
-totalExp += expRequiredForNextLevel;
-expRequiredForNextLevel = Math.floor(gameData._BALANCE._BASE_MAX_EXP * Math.pow(gameData._BALANCE._MAX_EXP_MULTI, level - 1));
-}
-const weaponAttack = playerData.wTier * gameData._BALANCE._WEAPON_BONUS;
-const armorHp = playerData.aTier * gameData._BALANCE._ARMOR_BONUS;
-return {
-level: level,
-maxHp: gameData._BALANCE._BASE_HP + (level - 1) * gameData._BALANCE._HP_BONUS + armorHp,
-attack: gameData._BALANCE._BASE_ATTACK + (level - 1) * gameData._BALANCE._ATTACK_BONUS + weaponAttack,
-maxExp: expRequiredForNextLevel,
-};
-},
-_prevMaxExp(level) {
-if(level <= 1) {
-return 0;
-}
-const previousLevel = level - 1;
-return Math.floor(gameData._BALANCE._BASE_MAX_EXP * Math.pow(gameData._BALANCE._MAX_EXP_MULTI, previousLevel - 1));
-},
-_updateHp(amount) {
-playerData.hp = Math.min(playerData.hp + amount, player._calculateStats(playerData.exp).maxHp);
-},
-_death() {
-const goldLoss = playerData.gold / 2 | 0;
-playerData.gold -= goldLoss;
-const playerDataBeforeDeath = player._calculateStats(playerData.exp);
-if(playerDataBeforeDeath.level === 1) {
-playerData.exp = 0;
-} else {
-const newLevel = Math.max(playerDataBeforeDeath.level - 1, 1);
-const previousLevelMinExp = player._prevMaxExp(newLevel);
-playerData.exp = previousLevelMinExp;
-}
-playerData.flr = Math.max(playerData.flr - 1, 1);
-playerData.hp = player._calculateStats(playerData.exp).maxHp;
+        while(exp >= expRequiredForNextLevel) {
+            level++;
+            totalExp += expRequiredForNextLevel;
+            expRequiredForNextLevel = Math.floor(gameData._BALANCE._BASE_MAX_EXP * Math.pow(gameData._BALANCE._MAX_EXP_MULTI, level - 1));
+        }
+        const weaponAttack = (playerData.wTier * gameData._BALANCE._WEAPON_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100);
+		const armorHp = (playerData.aTier * gameData._BALANCE._ARMOR_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100);
+        return {
+            level: level,
+            maxHp: gameData._BALANCE._BASE_HP + (level - 1) * gameData._BALANCE._HP_BONUS + armorHp,
+            attack: gameData._BALANCE._BASE_ATTACK + (level - 1) * gameData._BALANCE._ATTACK_BONUS + weaponAttack,
+            maxExp: expRequiredForNextLevel,
+        };
+    },
+    _prevMaxExp(level) {
+        if(level <= 1) {
+            return 0;
+        }
+        const previousLevel = level - 1;
+        return Math.floor(gameData._BALANCE._BASE_MAX_EXP * Math.pow(gameData._BALANCE._MAX_EXP_MULTI, previousLevel - 1));
+    },
+    _updateHp(amount) {
+        playerData.hp = Math.min(playerData.hp + amount, player._calculateStats(playerData.exp).maxHp);
+        playerData.legends["player Stats"]._TOTAL_HEALED.value += amount;
+    },
+    _death() {
+        const goldLoss = playerData.gold / 2 | 0;
+        playerData.gold -= goldLoss;
+        const playerDataBeforeDeath = player._calculateStats(playerData.exp);
+		const oldExp = playerData.exp;
+        if(playerDataBeforeDeath.level === 1) {
+            playerData.exp = 0;
+        } else {
+            const newLevel = Math.max(playerDataBeforeDeath.level - 1, 1);
+            const previousLevelMinExp = player._prevMaxExp(newLevel);
+            playerData.exp = previousLevelMinExp;
+			playerData.legends["player Stats"]._LEVELS_LOST.value++;
+        }
+		const expLost = oldExp - playerData.exp;
+        playerData.flr = Math.max(playerData.flr - 1, 1);
+        playerData.hp = player._calculateStats(playerData.exp).maxHp;
 
-enemyLogic._generateEnemies();
-playerData.fndB = false;
-playerData.deadB = false;
-saveGame();
+        enemyLogic._generateEnemies();
+        playerData.fndB = false;
+        playerData.deadB = false;
+        saveGame();
 
-ui._printMessage(ui._randomDialogue('playerDeath'), true);
-ui._printMessage(`You return to level ${player._calculateStats(playerData.exp).level}, floor ${playerData.flr} and have ${playerData.gold} gold left.`, true);
-playEffect(gameData._SOUND_EFFECTS.playerDeath);
-},
-_levelUp() {
-const currentplayerData = player._calculateStats(playerData.exp);
-playerData.hp = currentplayerData.maxHp;
-ui._printMessage(ui._randomDialogue('levelUp'), true);
-ui._printMessage(`Congratulations! You reached level ${currentplayerData.level}!<br>Your max HP and attack have increased!`, true);
-playEffect(gameData._SOUND_EFFECTS.levelUp);
+        playerData.legends["player Stats"]._PLAYER_DEATHS.value++;
+        
+        playerData.legends["player Stats"]._EXP_LOST.value += expLost;
+
+        ui._printMessage(ui._randomDialogue('playerDeath'), true);
+        ui._printMessage(`You return to level ${player._calculateStats(playerData.exp).level}, floor ${playerData.flr} and have ${playerData.gold} gold left.`, true);
+        playEffect(gameData._SOUND_EFFECTS.playerDeath);
+    },
+    _levelUp(previousPlayerData) {
+		
+    const currentPlayerData = player._calculateStats(playerData.exp);
+    const levelsGained = currentPlayerData.level - previousPlayerData.level;
+	playerData.legends["player Stats"]._TOTAL_LEVELS_GAINED.value += levelsGained;
+
+    playerData.hp = currentPlayerData.maxHp;
+    ui._printMessage(ui._randomDialogue('levelUp'), true);
+    ui._printMessage(`Congratulations! You reached level ${currentPlayerData.level}!<br>Your max HP and attack have increased!`, true);
+    playEffect(gameData._SOUND_EFFECTS.levelUp);
 },
 };
 
 
 // Enemy module
 const enemyLogic = {
-_generateEnemies() {
-let selectedEnemies = new Set(),
-availableEnemies;
-playerData.flr === 1 ?
-Array(3).fill(null).forEach(() => selectedEnemies.add(enemyLogic._randomEnemy('easy').name)) : ['easy', 'medium', 'hard'].forEach(difficulty => selectedEnemies.add(enemyLogic._randomEnemy(difficulty).name));
-playerData.enmy = [...selectedEnemies];
-const floorBoss = gameData._ENEMIES
-.filter(enemy => playerData.enmy.includes(enemy.name))
-.map((_, index, availableEnemies) => availableEnemies[Math.random() * availableEnemies.length | 0])[0];
-playerData.flrB = floorBoss.name;
-},
-_scaleEnemy(enemyName, isFloorBoss = false) {
-const enemyTemplate = gameData._ENEMIES.find((enemy) => enemy.name === enemyName);
-const scalingFactor = 1 + (playerData.flr - 1) * gameData._BALANCE._FLOOR_SCALING;
-const scaledEnemy = utils._clone(enemyTemplate);
-scaledEnemy.maxHp = scaledEnemy.maxHp * scalingFactor | 0;
-scaledEnemy.attack = scaledEnemy.attack * scalingFactor | 0;
-scaledEnemy.gold = scaledEnemy.gold * scalingFactor | 0;
-scaledEnemy.exp = scaledEnemy.exp * scalingFactor | 0;
-scaledEnemy.hp = scaledEnemy.maxHp;
-if(isFloorBoss) {
-const bossScaling = gameData._BALANCE._BOSS_SCALING;
-scaledEnemy.isFloorBoss = true;
-scaledEnemy.name += ` (Floor Boss)`;
-scaledEnemy.maxHp = scaledEnemy.maxHp * bossScaling | 0;
-scaledEnemy.attack = scaledEnemy.attack * bossScaling | 0;
-scaledEnemy.gold = scaledEnemy.gold * bossScaling | 0;
-scaledEnemy.exp = scaledEnemy.exp * bossScaling | 0;
-scaledEnemy.hp = scaledEnemy.maxHp;
-}
-return scaledEnemy;
-},
-_randomEnemy(difficulty) {
-const filteredEnemies = gameData._ENEMIES.filter(enemy => !difficulty || enemy.difficulty === difficulty);
-const randomIndex = Math.random() * filteredEnemies.length | 0;
-const enemy = utils._clone(filteredEnemies[randomIndex]);
-enemy.hp = enemy.maxHp;
-return enemy;
-},
+  _generateEnemies() {
+    let selectedEnemies = new Set(),
+    availableEnemies;
+    playerData.flr === 1 ?
+    Array(3).fill(null).forEach(() => selectedEnemies.add(enemyLogic._randomEnemy('easy').name)) : ['easy', 'medium', 'hard'].forEach(difficulty => selectedEnemies.add(enemyLogic._randomEnemy(difficulty).name));
+    playerData.enmy = [...selectedEnemies];
+    const floorBoss = gameData._ENEMIES
+    .filter(enemy => playerData.enmy.includes(enemy.name))
+    .map((_, index, availableEnemies) => availableEnemies[Math.random() * availableEnemies.length | 0])[0];
+    playerData.flrB = floorBoss.name;
+  },
+  _scaleEnemy(enemyName, isFloorBoss = false) {
+    const enemyTemplate = gameData._ENEMIES.find((enemy) => enemy.name === enemyName);
+    const scalingFactor = 1 + (playerData.flr - 1) * gameData._BALANCE._FLOOR_SCALING;
+    const scaledEnemy = utils._clone(enemyTemplate);
+    scaledEnemy.maxHp = scaledEnemy.maxHp * scalingFactor | 0;
+    scaledEnemy.attack = scaledEnemy.attack * scalingFactor | 0;
+    scaledEnemy.gold = scaledEnemy.gold * scalingFactor | 0;
+    scaledEnemy.exp = scaledEnemy.exp * scalingFactor | 0;
+    scaledEnemy.hp = scaledEnemy.maxHp;
+    if(isFloorBoss) {
+      const bossScaling = gameData._BALANCE._BOSS_SCALING;
+      scaledEnemy.isFloorBoss = true;
+      scaledEnemy.maxHp = scaledEnemy.maxHp * bossScaling | 0;
+      scaledEnemy.attack = scaledEnemy.attack * bossScaling | 0;
+      scaledEnemy.gold = scaledEnemy.gold * bossScaling | 0;
+      scaledEnemy.exp = scaledEnemy.exp * bossScaling | 0;
+      scaledEnemy.hp = scaledEnemy.maxHp;
+    }
+    return scaledEnemy;
+  },
+  _randomEnemy(difficulty) {
+    const filteredEnemies = gameData._ENEMIES.filter(enemy => !difficulty || enemy.difficulty === difficulty);
+    const randomIndex = Math.random() * filteredEnemies.length | 0;
+    const enemy = utils._clone(filteredEnemies[randomIndex]);
+    enemy.hp = enemy.maxHp;
+    return enemy;
+  },
 
-_fight(enemyTemplate) {
-ui._setButtons(false, false);
-combatBtns.style.display = 'block';
+  _fight(enemyTemplate) {
+    ui._setButtons(false, false);
+    combatBtns.style.display = 'block';
 
-const enemy = utils._clone(enemyTemplate);
-ui._updateEnemyStats(enemy);
-const damageToPlayer = utils._damage(enemy.attack);
+    const enemy = utils._clone(enemyTemplate);
+    ui._updateEnemyStats(enemy);
+    const damageToPlayer = utils._damage(enemy.attack);
 
-const fightBtn = el('fightBtn');
-const runBtn = el('runBtn');
+    const fightBtn = el('fightBtn');
+    const runBtn = el('runBtn');
+	
+	playerData.legends["Overall Enemy Stats"]._ENEMY_FIGHTS.value++;
+	playerData.legends["Individual Enemy Stats"][enemy.name]._FIGHTS.value++;
+	if (enemy.isFloorBoss) {
+		playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_FIGHTS.value++;
+	}
+	
+    fightBtn.onclick = () => {
+      const currentplayerData = player._calculateStats(playerData.exp);
+      const damageToEnemy = utils._damage(currentplayerData.attack);
 
-fightBtn.onclick = () => {
-const currentplayerData = player._calculateStats(playerData.exp);
-const damageToEnemy = utils._damage(currentplayerData.attack);
+      enemy.hp -= damageToEnemy;
+      playerData.hp -= damageToPlayer;
+      ui._updateEnemyStats(enemy);
 
-enemy.hp -= damageToEnemy;
-playerData.hp -= damageToPlayer;
-ui._updateEnemyStats(enemy);
-if(playerData.hp <= 0) {
-ui._printMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} defeated you.`);
-player._death();
-ui._resetUI();
-} else if (enemy.hp <= 0) {
-    playerData.gold += enemy.gold;
-    playerData.exp += enemy.exp;
-    playerData.unclaimedBones += gameData._BALANCE._BASE_BONE_INCOME;
-    
-    if (enemy.isFloorBoss) {
-      playerData.unclaimedSkulls += gameData._BALANCE._BASE_SKULL_INCOME;
+      
+      playerData.legends["Overall Enemy Stats"]._ENEMY_DAMAGE_DEALT.value += damageToEnemy;
+      playerData.legends["Overall Enemy Stats"]._ENEMY_DAMAGE_TAKEN_FROM.value += damageToPlayer;
+
+      if (enemy.isFloorBoss) {
+		
+        playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_DAMAGE_DEALT.value += damageToEnemy;
+        playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_DAMAGE_TAKEN_FROM.value += damageToPlayer;
+      }
+
+      
+      playerData.legends["Individual Enemy Stats"][enemy.name]._DAMAGE_DEALT.value += damageToEnemy;
+      playerData.legends["Individual Enemy Stats"][enemy.name]._DAMAGE_TAKEN_FROM.value += damageToPlayer;
+
+      if(playerData.hp <= 0) {
+        ui._printMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} defeated you.`);
+        player._death();
+        ui._resetUI();
+        if (enemy.isFloorBoss) {
+          playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_DEATHS_FROM.value++;
+        }
+		playerData.legends["Overall Enemy Stats"]._DEATHS_FROM.value++;
+        playerData.legends["Individual Enemy Stats"][enemy.name]._DEATHS_FROM.value++;
+      } else if (enemy.hp <= 0) {
+		const expGain = enemy.exp * (playerData.Wisdom == 0 ? 1 : 1 + playerData.Wisdom / 100);
+		const goldGain = enemy.gold * (playerData.Greed == 0 ? 1 : 1 + playerData.Greed / 100);
+        playerData.gold += enemy.gold;
+        playerData.exp += enemy.exp;
+        playerData.unclaimedBones += gameData._BALANCE._BASE_BONE_INCOME;
+        playerData.legends["player Stats"]._TOTAL_GOLD_GAINED.value += enemy.gold;
+        playerData.legends["player Stats"]._TOTAL_EXP_GAINED.value += enemy.exp;
+        
+        if (enemy.isFloorBoss) {
+          playerData.unclaimedSkulls += gameData._BALANCE._BASE_SKULL_INCOME;
+          
+          playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_KILLED.value++;
+        }
+
+        playerData.legends["Overall Enemy Stats"]._TOTAL_ENEMIES_KILLED.value++;
+        playerData.legends["Individual Enemy Stats"][enemy.name]._KILLED.value++;
+
+        ui._printMessage(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
+        (playerData.exp >= currentplayerData.maxExp) ? player._levelUp(currentplayerData) : playEffect(gameData._SOUND_EFFECTS.victory);
+
+        if (enemy.isFloorBoss) {
+          playerData.deadB = true;
+          ui._printMessage(ui._randomDialogue(`defeatBoss`), true);
+        }
+        ui._resetUI();
+      } else {
+        ui._printMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} dealt ${damageToPlayer} damage to you.`);
+      }
     }
 
-    ui._printMessage(`The ${enemy.name} dealt ${damageToPlayer} damage to you.<br>You dealt ${damageToEnemy} damage to the ${enemy.name} and defeated it!<br>You earned ${enemy.gold} gold and ${enemy.exp} exp!`);
-    (playerData.exp >= currentplayerData.maxExp) ? player._levelUp() : playEffect(gameData._SOUND_EFFECTS.victory);
-
-    if (enemy.isFloorBoss) {
-      playerData.deadB = true;
-      ui._printMessage(ui._randomDialogue(`defeatBoss`), true);
-    }
-    ui._resetUI();
-  } else {
-ui._printMessage(`You dealt ${damageToEnemy} damage to the ${enemy.name}.<br>The ${enemy.name} dealt ${damageToPlayer} damage to you.`);
-}
-}
-
-runBtn.onclick = () => {
-playerData.hp -= damageToPlayer;
-if(playerData.hp <= 0) {
-ui._printMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away and were defeated.`);
-player._death();
-} else {
-ui._printMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away.`);
-}
-ui._resetUI();
+    runBtn.onclick = () => {
+      playerData.hp -= damageToPlayer;
+	  
+      playerData.legends["Overall Enemy Stats"]._ENEMY_DAMAGE_TAKEN_FROM.value += damageToPlayer;
+      if (enemy.isFloorBoss) {
+        playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_DAMAGE_TAKEN_FROM.value += damageToPlayer;
+      }
+      playerData.legends["Individual Enemy Stats"][enemy.name]._DAMAGE_TAKEN_FROM.value += damageToPlayer;
+	  
+      if(playerData.hp <= 0) {
+        ui._printMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away and were defeated.`);
+        player._death();
+        if (enemy.isFloorBoss) {
+          playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_DEATHS_FROM.value++;
+        }
+		playerData.legends["Overall Enemy Stats"]._TOTAL_DEATHS_FROM.value++;
+        playerData.legends["Individual Enemy Stats"][enemy.name]._DEATHS_FROM.value++;
+      } else {
+        ui._printMessage(`You fled from the ${enemy.name}.<br>But took ${damageToPlayer} damage while running away.`);
+        playerData.legends["Overall Enemy Stats"]._ENEMY_RUN_ATTEMPTS.value++;
+        if (enemy.isFloorBoss) {
+          playerData.legends["Floor Boss Stats"]._FLOOR_BOSS_RUN_ATTEMPTS.value++;
+        }
+        playerData.legends["Individual Enemy Stats"][enemy.name]._RUN_ATTEMPTS.value++;
+      }
+      ui._resetUI();
+    };
+  },
 };
-},
-};
+
 
 
 // UI module
@@ -843,7 +920,7 @@ el('armorTierText').textContent = playerData.aTier;
 },
 _updateEnemyStats(enemy) {
 if(enemy) {
-el('enemyName').textContent = enemy.name;
+el('enemyName').textContent = enemy.isFloorBoss ? `${enemy.name} (Floor Boss)` : enemy.name;
 const enemyHpPercentage = (enemy.hp / enemy.maxHp) * 100;
 el('enemyHpText').textContent = `${enemy.hp}/${enemy.maxHp}`;
 el('enemyHpProgress').style.width = `${enemyHpPercentage}%`;
@@ -884,12 +961,14 @@ enemyLogic._fight(scaledEnemy);
 },
 nothing() {
 ui._printMessage(ui._randomDialogue(`nothingFound`));
+playerData.legends["player Stats"]._TOTAL_NOTHING_FOUND.value++;
 },
 healing() {
 const healingAmount = (Math.random() * (gameData._BALANCE._MAX_HEAL - gameData._BALANCE._MIN_HEAL) | 0) + gameData._BALANCE._MIN_HEAL;
 player._updateHp(healingAmount);
 ui._printMessage(ui._randomDialogue(`healingShrine`));
 ui._printMessage(`You recovered ${healingAmount} HP!`, true);
+playerData.legends["player Stats"]._TOTAL_SHRINES_FOUND.value++;
 },
 boss() {
 playerData.fndB = true;
@@ -897,13 +976,14 @@ ui._printMessage(ui._randomDialogue(`bossFound`));
 ui._printMessage(`You found the floor boss!`, true);
 const floorBossCopy = enemyLogic._scaleEnemy(playerData.flrB, true);
 ui._updateEnemyStats(floorBossCopy);
+ui._updateBossButton();
 },
 };
-
 
 // top level functions
 const explore = logError(function() {
 ui._updateEnemyStats(null);
+playerData.legends["player Stats"]._TOTAL_EXPLORED.value++;
 
 const validEncounters = gameData._ENCOUNTERS.filter(
 (encounter) => encounter.type !== 'boss' || !playerData.fndB
@@ -949,6 +1029,7 @@ healthRestored = healingAmount;
 }
 if(potionsUsed > 0) {
 ui._printMessage(`You used ${potionsUsed} potion(s) and recovered ${healthRestored} HP!`);
+playerData.legends["player Stats"]._TOTAL_POTIONS_USED.value += potionsUsed;
 } else if(playerData.hp >= currentplayerData.maxHp) {
 ui._printMessage('Your HP is already full.');
 } else {
@@ -977,7 +1058,193 @@ ui._printMessage(`You've reached floor ${playerData.flr}!`, true);
 playEffect(gameData._SOUND_EFFECTS.nextFloor);
 enemyLogic._generateEnemies();
 ui._updateEnemyStats(null);
+ui._updateBossButton();
+playerData.legends["player Stats"]._TOTAL_FLOORS_CLIMBED.value++;
 });
+
+
+
+// bone altar start
+function toggleAltar() {
+const isAltarOpen = altarMenu.style.display === 'block';
+altarMenu.style.display = isAltarOpen ? 'none' : 'block';
+gameContainer.style.display = isAltarOpen ? 'flex' : 'none';
+if(!isAltarOpen) {
+generateUpgradeMenu();
+}
+
+}
+
+function updateAltarUI() {
+unclaimedBonesText.innerText = playerData.unclaimedBones;
+unclaimedSkullsText.innerText = playerData.unclaimedSkulls;
+bonesText.innerText = playerData.bones;
+skullsText.innerText = playerData.skulls;
+
+}
+
+
+
+function altarTimer() {
+  const currentTime = new Date().getTime();
+  const timeDifference = currentTime - playerData.lastTime;
+
+  playerData.timer += timeDifference;
+
+  if (playerData.timer >= 600000) {
+    const boneIncome = Math.floor(playerData.timer / 600000) * (gameData._BALANCE._BASE_BONE_INCOME * playerData.Collecting);
+    playerData.unclaimedBones += boneIncome;
+	playerData.pot += playerData.Alchemy;
+    playerData.timer %= 600000;
+    updateAltarUI();
+	ui._updatePlayerStats();
+  }
+
+  playerData.lastTime = currentTime;
+  const remainingTime = 600 - Math.floor(playerData.timer / 1000) % 600;
+  timerText.innerText = `${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(2, '0')}`;
+  updateAltarUI();
+
+  setTimeout(altarTimer, 1000);
+}
+
+function altarClaim() {
+	playerData.bones += playerData.unclaimedBones;
+	playerData.skulls += playerData.unclaimedSkulls;
+	playerData.legends["player Stats"]._TOTAL_BONES_GAINED.value += playerData.unclaimedBones;
+	playerData.legends["player Stats"]._TOTAL_SKULLS_GAINED.value += playerData.unclaimedSkulls;
+	
+	playerData.unclaimedBones = 0;
+	playerData.unclaimedSkulls = 0;
+	
+	updateAltarUI();
+	generateUpgradeMenu();
+}
+
+
+function generateUpgradeMenu() {
+    upgradeMenu.innerHTML = '';
+    const upgrades = ['Collecting', 'Alchemy', 'Armorer', 'Wisdom', 'Greed'];
+    const upgradeDescriptions = {
+        'Collecting': '+5 Bones/10 mins',
+        'Alchemy': '+1 potion/10 mins',
+		'Armorer': '+1% equipment stats',
+        'Wisdom': '+1% exp gain',
+        'Greed': '+1% gold gain'
+    };
+
+    for (const upgrade of upgrades) {
+        const upgradeContainer = document.createElement('div');
+        upgradeContainer.className = 'upgrade-item';
+
+        const upgradeTop = document.createElement('div');
+        upgradeTop.className = 'upgrade-top';
+
+        const upgradeName = document.createElement('div');
+        upgradeName.className = 'upgrade-name';
+        upgradeName.innerText = `${upgrade}: ${playerData[upgrade]}`;
+        upgradeTop.appendChild(upgradeName);
+
+        const upgradeButton = document.createElement('button');
+        upgradeButton.innerText = 'Upgrade';
+        upgradeButton.onclick = () => upgradeSkill(upgrade);
+
+        const boneCost = getUpgradeCost(upgrade);
+        const skullCost = getUpgradeSkullCost(upgrade);
+        upgradeButton.disabled = playerData.bones < boneCost || playerData.skulls < skullCost;
+
+        upgradeTop.appendChild(upgradeButton);
+        upgradeContainer.appendChild(upgradeTop);
+
+        const upgradeCost = document.createElement('div');
+        upgradeCost.className = 'upgrade-cost';
+        upgradeCost.innerText = `${skullCost} ` + skullCost > 1 ? `skulls` : `skull` + ` & ${boneCost} Bones`;
+        upgradeContainer.appendChild(upgradeCost);
+
+        const upgradeDescription = document.createElement('div');
+        upgradeDescription.className = 'upgrade-description';
+        upgradeDescription.innerText = upgradeDescriptions[upgrade];
+        upgradeContainer.appendChild(upgradeDescription);
+
+        upgradeMenu.appendChild(upgradeContainer);
+    }
+}
+
+
+function getUpgradeCost(upgrade) {
+    return 1000 * Math.pow(2, playerData[upgrade]);
+}
+
+function getUpgradeSkullCost(upgrade) {
+    return 1 + Math.floor(playerData[upgrade] / 10);
+}
+
+function upgradeSkill(upgrade) {
+    const boneCost = getUpgradeCost(upgrade);
+    const skullCost = getUpgradeSkullCost(upgrade);
+
+    if (playerData.bones >= boneCost && playerData.skulls >= skullCost) {
+        playerData.bones -= boneCost;
+        playerData.skulls -= skullCost;
+        playerData[upgrade]++;
+        updateAltarUI();
+        generateUpgradeMenu();
+    }
+}
+
+
+
+
+// bone altar end
+
+
+
+// start of legends
+function toggleLegendsMenu() {
+    const isLegendsMenuOpen = legendsMenu.style.display === 'block';
+    legendsMenu.style.display = isLegendsMenuOpen ? 'none' : 'block';
+    altarMenu.style.display = isLegendsMenuOpen ? 'block' : 'none';
+
+    if (!isLegendsMenuOpen) {
+        legendsText.innerHTML = generateLegendsHTML(playerData.legends);
+    }
+}
+
+
+
+function generateLegendsHTML(legends) {
+    let html = '';
+    for (const [category, stats] of Object.entries(legends)) {
+        html += `<div class="legend-title">
+                    <span class="legend-name">${category}</span>
+                 </div>`;
+        if (category === 'Individual Enemy Stats') {
+            for (const [enemyName, enemyStats] of Object.entries(stats)) {
+                html += `<div class="legend-title">
+                            <span class="legend-name">${enemyName}</span>
+                         </div>`;
+                for (const [statKey, stat] of Object.entries(enemyStats)) {
+                    html += `<div class="legend-item">
+                                <span class="legend-name">${stat.name}</span>
+                                <span class="legend-value">${stat.value}</span>
+                             </div>`;
+                }
+            }
+        } else {
+            for (const [key, legend] of Object.entries(stats)) {
+                html += `<div class="legend-item">
+                            <span class="legend-name">${legend.name}</span>
+                            <span class="legend-value">${legend.value}</span>
+                         </div>`;
+            }
+        }
+    }
+    return html;
+}
+
+
+
+//end of legends
 
 
 
@@ -1051,87 +1318,7 @@ ui._printMessage(`You don't have enough gold to buy any potions.`);
 
 
 
-// bone altar start
-function toggleAltar() {
-const isAltarOpen = altarMenu.style.display === 'block';
-altarMenu.style.display = isAltarOpen ? 'none' : 'block';
-gameContainer.style.display = isAltarOpen ? 'flex' : 'none';
-}
 
-function updateAltarUI() {
-unclaimedBonesText.innerText = playerData.unclaimedBones;
-unclaimedSkullsText.innerText = playerData.unclaimedSkulls;
-bonesText.innerText = playerData.bones;
-skullsText.innerText = playerData.skulls;
-}
-
-
-
-function altarTimer() {
-  const currentTime = new Date().getTime();
-  const timeDifference = currentTime - playerData.lastTime;
-
-  playerData.timer += timeDifference;
-
-  if (playerData.timer >= 600000) {
-    const boneIncome = Math.floor(playerData.timer / 600000) * (gameData._BALANCE._BASE_BONE_INCOME * playerData.bIncome);
-    playerData.unclaimedBones += boneIncome;
-    playerData.timer %= 600000;
-    updateAltarUI();
-  }
-
-  playerData.lastTime = currentTime;
-  const remainingTime = 600 - Math.floor(playerData.timer / 1000) % 600;
-  timerText.innerText = `${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(2, '0')}`;
-  updateAltarUI();
-
-  setTimeout(altarTimer, 1000);
-}
-
-function altarClaim() {
-	playerData.bones += playerData.unclaimedBones;
-	playerData.skulls += playerData.unclaimedSkulls;
-	playerData.unclaimedBones = 0;
-	playerData.unclaimedSkulls = 0;
-	updateAltarUI();
-}
-
-
-
-// bone altar end
-
-
-
-// start of legends
-
-
-
-
-
-function toggleLegendsMenu() {
-    const isLegendsMenuOpen = legendsMenu.style.display === 'block';
-    legendsMenu.style.display = isLegendsMenuOpen ? 'none' : 'block';
-    altarMenu.style.display = isLegendsMenuOpen ? 'block' : 'none';
-
-    if (!isLegendsMenuOpen) {
-        legendsText.innerHTML = generateLegendsHTML(playerData.legends);
-    }
-}
-
-
-
-function generateLegendsHTML(legends) {
-    let html = '';
-    for (const [name, value] of Object.entries(legends)) {
-        html += `<div class="legend-item">
-                    <span class="legend-name">${name}</span>
-                    <span class="legend-value">${value}</span>
-                 </div>`;
-    }
-    return html;
-}
-
-//end of legends
 
 
 

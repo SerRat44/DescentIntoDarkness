@@ -2,7 +2,7 @@
   "scripts": {
     "clean": "del-cli dist/**/*",
     "minify-js": "terser src/main.js --config-file terser.conf -o ./dist/main.js",
-    "minify-js-2": "terser src/indexLoader.js -c -m -o ./dist/indexLoader.js",
+    "minify-js-2": "terser src/indexLoader.js -c -o ./dist/indexLoader.js",
     "minify-html": "html-minifier --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --use-short-doctype --minify-css true --minify-js true -o ./dist/main.html ./src/main.html",
     "minify-html-2": "html-minifier --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --use-short-doctype --minify-css true --minify-js true -o ./dist/index.html ./src/index.html",
     "minify-css": "postcss src/*.css -d ./dist",

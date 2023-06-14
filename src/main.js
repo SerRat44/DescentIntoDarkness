@@ -1125,15 +1125,18 @@ function altarClaim() {
 function generateUpgradeMenu() {
     upgradeMenu.innerHTML = '';
     const upgrades = ['Collecting', 'Alchemy', 'Armorer', 'Wisdom', 'Greed'];
-    const upgradeDescriptions = {
-        'Collecting': '+5 Bones/10 mins',
-        'Alchemy': '+1 potion/10 mins',
-		'Armorer': '+1% equipment stats',
-        'Wisdom': '+1% exp gain',
-        'Greed': '+1% gold gain'
-    };
+    
 
     for (const upgrade of upgrades) {
+		
+		const upgradeDescriptions = {
+        'Collecting': `+${playerData[upgrade] * gameData._BALANCE._BASE_BONE_INCOME} Bones/10 mins`,
+        'Alchemy': `+${playerData[upgrade]} potion/10 mins`,
+		'Armorer': `+${playerData[upgrade]}% equipment stats`,
+        'Wisdom': `+${playerData[upgrade]}% exp gain`,
+        'Greed': `+${playerData[upgrade]}% gold gain`
+    };
+		
         const upgradeContainer = document.createElement('div');
         upgradeContainer.className = 'upgrade-item';
 

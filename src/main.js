@@ -670,8 +670,8 @@ const player = {
             totalExp += expRequiredForNextLevel;
             expRequiredForNextLevel = Math.floor(gameData._BALANCE._BASE_MAX_EXP * Math.pow(gameData._BALANCE._MAX_EXP_MULTI, level - 1));
         }
-        const weaponAttack = (playerData.wTier * gameData._BALANCE._WEAPON_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100);
-		const armorHp = (playerData.aTier * gameData._BALANCE._ARMOR_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100);
+        const weaponAttack = Math.floor((playerData.wTier * gameData._BALANCE._WEAPON_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100));
+		const armorHp = Math.floor((playerData.aTier * gameData._BALANCE._ARMOR_BONUS) * (playerData.Armorer == 0 ? 1 : 1 + playerData.Armorer / 100));
         return {
             level: level,
             maxHp: gameData._BALANCE._BASE_HP + (level - 1) * gameData._BALANCE._HP_BONUS + armorHp,
@@ -1161,7 +1161,7 @@ function generateUpgradeMenu() {
 
         const upgradeCost = document.createElement('div');
         upgradeCost.className = 'upgrade-cost';
-        upgradeCost.innerText = `${skullCost} ` + skullCost > 1 ? `skulls` : `skull` + ` & ${boneCost} Bones`;
+        upgradeCost.innerText = `${skullCost} ` + (skullCost > 1 ? `skulls` : `skull`) + ` & ${boneCost} Bones`;
         upgradeContainer.appendChild(upgradeCost);
 
         const upgradeDescription = document.createElement('div');
@@ -1175,7 +1175,7 @@ function generateUpgradeMenu() {
 
 
 function getUpgradeCost(upgrade) {
-    return 1000 * Math.pow(2, playerData[upgrade]);
+    return 1000 * (playerData[upgrade] + 1);
 }
 
 function getUpgradeSkullCost(upgrade) {

@@ -1175,7 +1175,7 @@ function generateUpgradeMenu() {
 
 
 function getUpgradeCost(upgrade) {
-    return 1000 * playerData[upgrade];
+    return 1000 * Math.pow(2, playerData[upgrade]);
 }
 
 function getUpgradeSkullCost(upgrade) {

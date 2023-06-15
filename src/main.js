@@ -1161,7 +1161,7 @@ function generateUpgradeMenu() {
 
         const upgradeCost = document.createElement('div');
         upgradeCost.className = 'upgrade-cost';
-        upgradeCost.innerText = `${skullCost} ` + (skullCost > 1 ? `skulls` : `skull`) + ` & ${boneCost} Bones`;
+        upgradeCost.innerText = `${skullCost} ` + (skullCost > 1 ? `skulls` : `skull`) + `& ${boneCost} Bones`;
         upgradeContainer.appendChild(upgradeCost);
 
         const upgradeDescription = document.createElement('div');

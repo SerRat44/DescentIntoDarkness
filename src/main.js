@@ -824,8 +824,8 @@ const enemyLogic = {
 		playerData.legends["Overall Enemy Stats"]._DEATHS_FROM.value++;
         playerData.legends["Individual Enemy Stats"][enemy.name]._DEATHS_FROM.value++;
       } else if (enemy.hp <= 0) {
-		const expGain = enemy.exp * (playerData.Wisdom == 0 ? 1 : 1 + playerData.Wisdom / 100);
-		const goldGain = enemy.gold * (playerData.Greed == 0 ? 1 : 1 + playerData.Greed / 100);
+		const expGain = Math.floor(enemy.exp * (playerData.Wisdom == 0 ? 1 : 1 + playerData.Wisdom / 100));
+        const goldGain = Math.floor(enemy.gold * (playerData.Greed == 0 ? 1 : 1 + playerData.Greed / 100));
         playerData.gold += enemy.gold;
         playerData.exp += enemy.exp;
         playerData.unclaimedBones += gameData._BALANCE._BASE_BONE_INCOME;
